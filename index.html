@@ -1,0 +1,64 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>SAB Index — 서울옥션블루 내부자료</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#0f172a;color:#e2e8f0;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+.box{background:#1e293b;padding:34px 30px;border-radius:16px;width:320px;max-width:100%;text-align:center;box-shadow:0 12px 44px rgba(0,0,0,.45)}
+.box .lk{font-size:30px}
+.box h1{font-size:16px;margin:10px 0 6px}
+.box p{font-size:12.5px;color:#94a3b8;margin:0 0 18px;line-height:1.5}
+.box input{width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font-size:16px}
+.box button{width:100%;margin-top:11px;padding:12px;border:0;border-radius:9px;background:#6366f1;color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+.box button:hover{background:#4f46e5}
+.err{color:#f87171;font-size:12px;margin-top:9px;min-height:16px}
+</style><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="SAB Index"><meta name="theme-color" content="#000000"></head><body>
+<!-- 비번 박스는 기본 숨김 — 저장된 비번이 있으면 아예 표시하지 않고 로딩만 보인다(깜빡임 제거). -->
+<div class="box" id="gbox" style="display:none">
+<div class="lk">🔒</div>
+<h1>서울옥션블루 내부 자료</h1>
+<p>본 페이지는 접근이 제한된 자료입니다.<br>비밀번호를 입력하세요.</p>
+<input id="pw" type="password" placeholder="비밀번호" autofocus>
+<button id="go">열기</button>
+<div class="err" id="err"></div>
+</div>
+<div class="box" id="gload" style="display:none"><div class="lk">🔓</div><h1>불러오는 중…</h1><p>잠시만 기다려 주세요.</p></div>
+<script id="blob" type="application/json">{"salt": "3tIvSI7d1d4vcwiEp8W/Bg==", "iv": "AMrT51WKB3zyOnd1", "ct": "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", "iter": 600000}</script>
+<script>
+var B=JSON.parse(document.getElementById('blob').textContent);
+function b64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
+async function keyFrom(pw){
+  var kb=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(B.salt),iterations:B.iter,hash:'SHA-256'},kb,{name:'AES-GCM',length:256},false,['decrypt']);
+}
+async function dec(pw){
+  var k=await keyFrom(pw);
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(B.iv)},k,b64(B.ct));
+  return new TextDecoder().decode(pt);
+}
+// 같은 기기에서 다시 묻지 않기: localStorage + IndexedDB 두 곳에 기억, 열 때마다 다시 저장 (2026-10-17 운영자 글로벌 요청)
+var GKEY='sai_gate_pw';
+function idb(){return new Promise(function(res,rej){var r=indexedDB.open('gate',1);r.onupgradeneeded=function(){r.result.createObjectStore('kv')};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})}
+async function idbDo(mode,fn){try{var db=await idb();return await new Promise(function(res){var t=db.transaction('kv',mode),q=fn(t.objectStore('kv'));t.oncomplete=function(){res(q&&q.result)};t.onerror=t.onabort=function(){res(null)}})}catch(e){return null}}
+async function remember(pw){try{localStorage.setItem(GKEY,pw)}catch(e){}await idbDo('readwrite',function(s){return s.put(pw,GKEY)});try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}}
+async function recall(){var s=null;try{s=localStorage.getItem(GKEY)}catch(e){}return s||await idbDo('readonly',function(s){return s.get(GKEY)})}
+async function forget(){try{localStorage.removeItem(GKEY)}catch(e){}await idbDo('readwrite',function(s){return s.delete(GKEY)})}
+async function openDoc(pw,save){
+  var html=await dec(pw);
+  await remember(pw);
+  document.open();document.write(html);document.close();
+}
+document.getElementById('go').onclick=async function(){
+  try{await openDoc(document.getElementById('pw').value,true);}
+  catch(e){document.getElementById('err').textContent='비밀번호가 올바르지 않습니다.';}
+};
+document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('go').click();});
+// 저장된 비밀번호가 있으면 자동 복호화 — 이때 비밀번호 입력 화면 대신 '불러오는 중'을 보여줘 깜빡임을 없앤다.
+(async function(){var s=await recall();
+  if(s){ var gl=document.getElementById('gload'); if(gl)gl.style.display='';   // 로딩만 표시(비번 박스 아예 미표시)
+    try{await openDoc(s,false);}catch(e){await forget();location.reload();} }
+  else{ var gb=document.getElementById('gbox'); if(gb)gb.style.display=''; var p=document.getElementById('pw'); if(p)p.focus(); }  // 저장 비번 없을 때만 입력창
+})();
+</script></body></html>
