@@ -1,4 +1,4 @@
-/* SAB Index 계산 엔진 — 시험판 4회차(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
+/* SAB Index 계산 엔진 — 시험판 9회차 채택 규칙(4회차 틀 + 5·8·9회차 보정)(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
    브라우저에서 작가 거래 기록(data/lots/a{작가}.js)만으로 오늘 평가가격·근거 작품·흐름을 계산한다.
    단어 판정(kind)·재질/제목 단어·경매사 급(tier)은 데이터 쪽에서 미리 계산해 넣었다. */
 (function (root) {
@@ -15,7 +15,7 @@
   /* 거래 기록 풀기 */
   E.load = function (raw) {
     var c = raw.cols, rows = raw.rows.map(function (r) { var o = {}; for (var i = 0; i < c.length; i++) o[c[i]] = r[i]; o.mtS = o.mt ? o.mt.split(" ") : []; o.ttS = o.tt ? o.tt.split(" ") : []; return o; });
-    return { rows: rows, sig: raw.sig || {} };
+    return { rows: rows, sig: raw.sig || {}, res: raw.res || [] };
   };
 
   function jacc(a, b) { if (!a.length || !b.length) return null; var s = {}, inter = 0, uni = 0, k; for (k = 0; k < a.length; k++) s[a[k]] = 1; for (k = 0; k < b.length; k++) if (s[b[k]] === 1) { inter++; s[b[k]] = 2; } uni = a.length + b.length - inter; return inter / uni; }
@@ -64,6 +64,13 @@
     return v[v.length - 1][0];
   }
   E.wmedian = wmedian;
+  E.quartiles = quartiles;
+  /* 사용자가 고른 근거 작품만으로 계산(기획 P24·P26: 선택 목록에 추가·삭제하면 가격 즉시 재계산) — 값은 엔진이 보정한 adj, 가중치는 유사도 */
+  E.fromSelection = function (sel, sc) {
+    if (!sel.length) return null;
+    var pts = sel.map(function (u) { return u.adj; }), q = pts.length >= 2 ? quartiles(pts) : [pts[0], pts[0], pts[0]], f = sc || 1;
+    return { point: wmedian(sel.map(function (u) { return [u.adj, u.sim]; })) * f, lo: q[0] * f, hi: q[2] * f, n: sel.length };
+  };
   function sizeExponent(cands) {
     var pts = [];
     cands.forEach(function (c) { if (c.status === "sold" && c.area && c.price) pts.push([Math.log(c.area), Math.log(c.price)]); });
@@ -95,6 +102,13 @@
     D._tr[cut] = g; return g;
   }
   E.recentTrend = recentTrend;
+  /* 9회차 채택: 작가의 기준일 직전 12개월 낙찰에서 '그때 알던 정보로 낸 평가가격' 대비 실제가 로그 비율 중간값 r → exp(n/(n+10)·r), 5건 미만이면 1 */
+  function selfCal(D, asof) {
+    var lo = String(+asof.slice(0, 4) - 1).padStart(4, "0") + asof.slice(4), v = [];
+    (D.res || []).forEach(function (x) { if (x[0] >= lo && x[0] < asof) v.push(x[1]); });
+    return v.length < 5 ? 1 : Math.exp(v.length / (v.length + 10) * median(v));
+  }
+  E.selfCal = selfCal;
   /* v4.candidates: 같은 작가 기록 중 같은 분류·기준일 이전 10년, 평가 중인 그 랏만 제외 */
   E.candidates = function (D, t, asof) {
     return D.rows.filter(function (c) { return c.lot !== t.lot && c.cat === t.cat && c.date < asof && years(asof, c.date) <= LOOKBACK; });
@@ -133,6 +147,8 @@
     out.low_conf = sold5 < LOW_MIN && !same.length;
     out.point = wmedian(kept.map(function (k) { return [k[0], k[1]]; }));
     out.lo = q[0]; out.hi = q[2]; out.n = kept.length; out.b = b; out.tf = tf; out.g = g;
+    out.sc = 1;
+    if (!same.length && !opt.noSC) { var f = selfCal(D, asof); out.sc = f; out.point *= f; out.lo *= f; out.hi *= f; }
     out.top_sim = Math.round(Math.min(top[1], 1) * 100) / 100;
     out.img = top[2].id === t.id ? 1 : (IMG_CATS[t.cat] ? imgSim(D, t.id, top[2].id) : null);
     out.used = kept.map(function (k) { return { c: k[2], adj: k[0], sim: k[1], price: k[3] }; });

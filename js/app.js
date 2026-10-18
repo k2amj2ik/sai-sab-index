@@ -73,11 +73,12 @@
   SAB.artist = function (aid) { return (window.SAB_ARTISTS2 || []).filter(function (a) { return a.id === aid; })[0]; };
 
   /* ---------- 머리말·꼬리말 ---------- */
-  var NAV = [["index.html", "Home"], ["result.html", "작가·작품"], ["movers.html", "Market Movers"], ["portfolio.html", "Portfolio"], ["trust.html", "신뢰도"]];
-  SAB.shell = function (on, q) {
-    document.getElementById("hd").innerHTML = '<div class="w"><a class="logo" href="index.html">SAB <b>Index</b></a><form action="result.html"><input name="q" value="' + SAB.esc(q || "") + '" placeholder="작가 또는 작품 검색" aria-label="검색어"><button aria-label="검색"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg></button></form><nav>' + NAV.map(function (n) { return '<a href="' + n[0] + '"' + (n[0] === on ? ' class="on"' : "") + ">" + n[1] + "</a>"; }).join("") + '</nav><span class="user">컨설턴트 ▾</span></div>';
-    var f = document.getElementById("ft"); if (f) f.innerHTML = '<b>SAB Index</b>Seoul Auction Blue · Live Market Price · 내부 검토용 시안 · 2026-10-18 데이터 기준<br>평가가격은 SAB DB 경매 기록(2016~)으로 브라우저에서 직접 계산합니다. 외부 공유 금지.';
-    if (!document.querySelector(".top")) document.body.insertAdjacentHTML("beforeend", '<a class="top" href="#" aria-label="맨 위로" onclick="window.scrollTo(0,0);return false">︿</a>');
+  /* 시세로직 탭 하위 메뉴(blueIndex Demo는 js/bi.js의 BI.shell) */
+  var SUB = [["logic.html", "계산 방식"], ["trust.html", "신뢰도"], ["movers.html", "마켓무버"], ["logic.html#data", "필요한 데이터"]];
+  SAB.shell = function (on) {
+    if (window.BI) BI.shell("logic");
+    var sb = document.getElementById("sub");
+    if (sb) sb.innerHTML = '<div class="w">' + SUB.map(function (n) { return '<a href="' + n[0] + '"' + (n[0] === on ? ' class="on"' : "") + ">" + n[1] + "</a>"; }).join("") + "</div>";
   };
   SAB.artistHead = function (a) {
     if (!a) return "";
