@@ -34,6 +34,9 @@
   BI.stars = function (g) { var n = { Prime: 5, High: 4, Neutral: 3, Low: 2 }[g] || 0; return "★★★★★".slice(0, n) + '<span style="color:#ddd">' + "★★★★★".slice(n) + "</span>"; };
   BI.img = function (src, alt, cls) { return src ? '<img loading="lazy" src="' + esc(src) + '" alt="' + esc(alt || "") + '"' + (cls ? ' class="' + cls + '"' : "") + ' onerror="this.outerHTML=\'<div class=noimg>No Image</div>\'">' : '<div class="noimg">No Image</div>'; };
   BI.q = S.q;
+  /* 작가 사진: 자유 이용 허락(퍼블릭 도메인·CC0·CC BY·CC BY-SA) 사진만, 없으면 이름 첫 글자 */
+  BI.credit = function (a) { var p = a && a.photo; return p ? "사진: " + (p.author || "작자 미상") + " · " + (p.license || "") + " · 위키미디어 공용" : ""; };
+  BI.ph = function (a, cls) { var p = a && a.photo; return p ? '<span class="' + (cls || "ph") + '" title="' + esc(BI.credit(a)) + '"><img src="' + esc(p.src) + '" alt="' + esc(BI.en(a)) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>' : '<span class="' + (cls || "ph") + '">' + esc(BI.en(a).slice(0, 1)) + "</span>"; };
   BI.forSale = function (r) { return r.status === "upcoming" && BI.dd(r.date) >= 0; };   // 경매일이 지난 upcoming = 결과 미반영(Pending) — Only for Sale·Available Works에서 뺌
 
   /* ---------- 아이콘(기획서 그림의 globe·pin·겹친 사각형·폴더+ 등) ---------- */
@@ -134,7 +137,7 @@
   BI.abar = function (a, simple) {
     if (!a) return "";
     var p = BI.pidx(a), i = a.info || {}, ko = BI.ko(a);
-    return '<div class="ab' + (simple ? " simple" : "") + '"><div class="w"><div class="ph">' + esc(BI.en(a).slice(0, 1)) + '</div><div class="nm"><h1>' + esc(BI.en(a)) + '</h1><p class="nat">' + esc(BI.natLine(a)) + (ko ? " · " + esc(ko) : "") + '</p></div><div class="st">' +
+    return '<div class="ab' + (simple ? " simple" : "") + '"><div class="w">' + BI.ph(a) + '<div class="nm"><h1>' + esc(BI.en(a)) + '</h1><p class="nat">' + esc(BI.natLine(a)) + (ko ? " · " + esc(ko) : "") + '</p></div><div class="st">' +
       '<div><p class="l">Global Rank<span class="qm" title="Rank in Global — 이 데모 작가 ' + BI.arts().length + '명 중 최근 1년 낙찰 총액 순위(기획서는 Artist Price Index 순위). 아래 = 1년 전 대비">?</span></p><p class="v">' + BI.ic.globe + a.grank + '</p><p class="d">' + BI.rk(a.grank_chg) + "</p></div>" +
       '<div><p class="l">Local Rank<span class="qm" title="Rank in Origin — 같은 국적(' + esc(i.nat || "?") + ') 작가 ' + a.lrank_of + '명 중 순위">?</span></p><p class="v">' + BI.ic.pin + a.lrank + '</p><p class="d"><span class="mut">' + esc(cc(i.nat)) + "</span> " + BI.rk(a.lrank_chg) + "</p></div>" +
       '<div><p class="l">Demand Grade<span class="qm" title="낙찰가 ÷ 추정가 평균(EvP), 최근 3년 ' + (a.evp_n || 0) + '건 평균 ' + (a.evp ? a.evp.toFixed(2) : "-") + ' · Prime > 2 / High > 1.25 / Neutral > 0.75 / Low">?</span></p><p class="dg ' + (a.demand || "") + '">' + esc((a.demand || "-").toUpperCase()) + '</p><p class="stars">' + BI.stars(a.demand) + "</p></div>" +
