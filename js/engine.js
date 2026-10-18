@@ -79,6 +79,22 @@
     if (res.major.length < 5 || res.other.length < 5) return 2.0;
     return Math.min(6, Math.max(1, Math.exp(median(res.major) - median(res.other))));
   }
+  /* 8회차 채택: 작가의 최근 2년 반복 거래 흐름(연 로그 변화율 중간값, 15쌍 이상, ±30% 제한) — 같은 작품 과거 가격에만 반영 */
+  function recentTrend(D, asof) {
+    var cut = asof.slice(0, 7) + "-01"; D._tr = D._tr || {};
+    if (D._tr[cut] !== undefined) return D._tr[cut];
+    var by = {};
+    D.rows.forEach(function (r) { if (r.status === "sold" && r.price && r.date < cut && String(r.id).indexOf("aw_") !== 0) (by[r.id] = by[r.id] || []).push([r.date, r.price]); });
+    var rates = [];
+    Object.keys(by).forEach(function (k) {
+      var v = by[k]; if (v.length < 2) return;
+      v.sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] - b[1]; });
+      for (var i = 1; i < v.length; i++) { var dy = years(v[i][0], v[i - 1][0]), q = v[i][1] / v[i - 1][1]; if (dy >= 0.25 && years(cut, v[i][0]) <= 2 && q >= 1 / 20 && q <= 20) rates.push(Math.log(q) / dy); }
+    });
+    var g = rates.length >= 15 ? Math.max(-0.3, Math.min(0.3, median(rates))) : 0;
+    D._tr[cut] = g; return g;
+  }
+  E.recentTrend = recentTrend;
   /* v4.candidates: 같은 작가 기록 중 같은 분류·기준일 이전 10년, 평가 중인 그 랏만 제외 */
   E.candidates = function (D, t, asof) {
     return D.rows.filter(function (c) { return c.lot !== t.lot && c.cat === t.cat && c.date < asof && years(asof, c.date) <= LOOKBACK; });
@@ -102,7 +118,8 @@
     var b = sizeExponent(cands), tf = tierFactor(sold, b), tt = t.tier;
     var scored = use.map(function (u) { var c = u[0]; return [c.id === t.id ? SAME_SIM : simV3(D, t, c, asof), c, u[1]]; });
     scored.sort(function (x, y) { return y[0] - x[0]; });
-    function adj(c, p) { if (c.id === t.id) return p; /* 5회차 채택: 같은 작품 거래는 크기·경매사 급 보정 없이 그대로 */ var f = (t.area && c.area) ? Math.pow(t.area / c.area, b) : 1; if (c.tier !== tt) f *= tt === "major" ? tf : 1 / tf; return p * f; }
+    var g = recentTrend(D, asof);
+    function adj(c, p) { if (c.id === t.id) return g ? p * Math.exp(g * Math.min(3, years(asof, c.date))) : p; /* 5회차: 같은 작품은 크기·경매사 급 보정 없음 / 8회차: 최근 2년 흐름만 */ var f = (t.area && c.area) ? Math.pow(t.area / c.area, b) : 1; if (c.tier !== tt) f *= tt === "major" ? tf : 1 / tf; return p * f; }
     var pool = scored.slice(0, POOLK);
     if (opt.exclude) pool = scored.filter(function (x) { return !opt.exclude[x[1].lot]; }).slice(0, POOLK);
     var vals = pool.map(function (x) { return [adj(x[1], x[2]), x[0], x[1], x[2]]; });
@@ -115,7 +132,7 @@
     out.shown = sold5 >= SHOW_MIN || !!same.length;
     out.low_conf = sold5 < LOW_MIN && !same.length;
     out.point = wmedian(kept.map(function (k) { return [k[0], k[1]]; }));
-    out.lo = q[0]; out.hi = q[2]; out.n = kept.length; out.b = b; out.tf = tf;
+    out.lo = q[0]; out.hi = q[2]; out.n = kept.length; out.b = b; out.tf = tf; out.g = g;
     out.top_sim = Math.round(Math.min(top[1], 1) * 100) / 100;
     out.img = top[2].id === t.id ? 1 : (IMG_CATS[t.cat] ? imgSim(D, t.id, top[2].id) : null);
     out.used = kept.map(function (k) { return { c: k[2], adj: k[0], sim: k[1], price: k[3] }; });
