@@ -1,0 +1,64 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>blueIndex Demo — 서울옥션블루 내부자료</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#0f172a;color:#e2e8f0;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+.box{background:#1e293b;padding:34px 30px;border-radius:16px;width:320px;max-width:100%;text-align:center;box-shadow:0 12px 44px rgba(0,0,0,.45)}
+.box .lk{font-size:30px}
+.box h1{font-size:16px;margin:10px 0 6px}
+.box p{font-size:12.5px;color:#94a3b8;margin:0 0 18px;line-height:1.5}
+.box input{width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font-size:16px}
+.box button{width:100%;margin-top:11px;padding:12px;border:0;border-radius:9px;background:#6366f1;color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+.box button:hover{background:#4f46e5}
+.err{color:#f87171;font-size:12px;margin-top:9px;min-height:16px}
+</style><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="blueIndex"><meta name="theme-color" content="#000000"></head><body>
+<!-- 비번 박스는 기본 숨김 — 저장된 비번이 있으면 아예 표시하지 않고 로딩만 보인다(깜빡임 제거). -->
+<div class="box" id="gbox" style="display:none">
+<div class="lk">🔒</div>
+<h1>서울옥션블루 내부 자료</h1>
+<p>본 페이지는 접근이 제한된 자료입니다.<br>비밀번호를 입력하세요.</p>
+<input id="pw" type="password" placeholder="비밀번호" autofocus>
+<button id="go">열기</button>
+<div class="err" id="err"></div>
+</div>
+<div class="box" id="gload" style="display:none"><div class="lk">🔓</div><h1>불러오는 중…</h1><p>잠시만 기다려 주세요.</p></div>
+<script id="blob" type="application/json">{"salt": "T/lTmBdm+m+NtxL53+ODEw==", "iv": "qMgZQJ96M1pbBrIu", "ct": "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", "iter": 600000}</script>
+<script>
+var B=JSON.parse(document.getElementById('blob').textContent);
+function b64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
+async function keyFrom(pw){
+  var kb=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(B.salt),iterations:B.iter,hash:'SHA-256'},kb,{name:'AES-GCM',length:256},false,['decrypt']);
+}
+async function dec(pw){
+  var k=await keyFrom(pw);
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(B.iv)},k,b64(B.ct));
+  return new TextDecoder().decode(pt);
+}
+// 같은 기기에서 다시 묻지 않기: localStorage + IndexedDB 두 곳에 기억, 열 때마다 다시 저장 (2026-10-17 운영자 글로벌 요청)
+var GKEY='sai_gate_pw';
+function idb(){return new Promise(function(res,rej){var r=indexedDB.open('gate',1);r.onupgradeneeded=function(){r.result.createObjectStore('kv')};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})}
+async function idbDo(mode,fn){try{var db=await idb();return await new Promise(function(res){var t=db.transaction('kv',mode),q=fn(t.objectStore('kv'));t.oncomplete=function(){res(q&&q.result)};t.onerror=t.onabort=function(){res(null)}})}catch(e){return null}}
+async function remember(pw){try{localStorage.setItem(GKEY,pw)}catch(e){}await idbDo('readwrite',function(s){return s.put(pw,GKEY)});try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}}
+async function recall(){var s=null;try{s=localStorage.getItem(GKEY)}catch(e){}return s||await idbDo('readonly',function(s){return s.get(GKEY)})}
+async function forget(){try{localStorage.removeItem(GKEY)}catch(e){}await idbDo('readwrite',function(s){return s.delete(GKEY)})}
+async function openDoc(pw,save){
+  var html=await dec(pw);
+  await remember(pw);
+  document.open();document.write(html);document.close();
+}
+document.getElementById('go').onclick=async function(){
+  try{await openDoc(document.getElementById('pw').value,true);}
+  catch(e){document.getElementById('err').textContent='비밀번호가 올바르지 않습니다.';}
+};
+document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('go').click();});
+// 저장된 비밀번호가 있으면 자동 복호화 — 이때 비밀번호 입력 화면 대신 '불러오는 중'을 보여줘 깜빡임을 없앤다.
+(async function(){var s=await recall();
+  if(s){ var gl=document.getElementById('gload'); if(gl)gl.style.display='';   // 로딩만 표시(비번 박스 아예 미표시)
+    try{await openDoc(s,false);}catch(e){await forget();location.reload();} }
+  else{ var gb=document.getElementById('gbox'); if(gb)gb.style.display=''; var p=document.getElementById('pw'); if(p)p.focus(); }  // 저장 비번 없을 때만 입력창
+})();
+</script></body></html>

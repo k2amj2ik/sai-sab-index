@@ -48,6 +48,7 @@
     fold: sv('<path d="M3 7h6l2 2h10v10H3z"/><path d="M12 12v5M9.5 14.5h5"/>'),
     gear: sv('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'),
     search: sv('<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/>'),
+    eye: sv('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
     user: sv('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
     ok: sv('<circle cx="12" cy="12" r="9" stroke="#1aa34a"/><path d="M8 12.5l3 3 5-6" stroke="#1aa34a"/>'),
     tri: sv('<path d="M12 4l9 16H3z" stroke="#999"/>'),
@@ -69,11 +70,69 @@
     var tt = document.getElementById("tt"), hd = document.getElementById("hd"), ft = document.getElementById("ft");
     if (tt) tt.innerHTML = '<div class="w"><a href="index.html"' + (tab === "demo" ? ' class="on"' : "") + '>blueIndex Demo</a><a href="logic.html"' + (tab === "logic" ? ' class="on"' : "") + '>시세로직</a><a class="ext" href="' + BI.REVIEW + '" target="_blank" rel="noopener">데이터 검수</a></div>';
     if (hd && tab === "demo") {
-      hd.innerHTML = '<div class="w"><a class="logo" href="index.html">blue<b>Index</b></a><div class="srch"><form action="result.html" autocomplete="off"><input name="q" value="' + esc(q || "") + '" placeholder="Search Artists and Artworks" aria-label="검색"><button aria-label="검색">' + BI.ic.search.replace("<svg", '<svg width="18" height="18"') + '</button></form></div><div class="rt"><a class="user" href="portfolio.html">Consultant ▾</a><a class="out" href="index.html">Log Out</a></div></div>';
+      hd.innerHTML = '<div class="w"><a class="logo" href="index.html">blue<b>Index</b></a><div class="srch"><form action="result.html" autocomplete="off"><input name="q" value="' + esc(q || "") + '" placeholder="Search Artists and Artworks" aria-label="검색"><button aria-label="검색">' + BI.ic.search.replace("<svg", '<svg width="18" height="18"') + '</button></form></div><div class="rt">' + BI.acct() + '</div></div>';
       BI.ac(hd.querySelector(".srch"));
     }
+    var ha = document.getElementById("hacct");          // 메인(P11)은 GNB가 없어 오른쪽 위에 계정 영역만
+    if (ha) ha.innerHTML = BI.acct();
+    BI.bindAcct();
     if (ft) ft.innerHTML = "<b>© blueIndex</b>Seoul Auction Blue · blueIndex Demo — 2015 Wiveel(BR) 기획서 화면을 SAB DB 경매 기록(2016~)으로 재현 · " + BI.TODAY + " 기준 · 내부 검토용, 외부 공유 금지";
     if (!document.querySelector(".top")) document.body.insertAdjacentHTML("beforeend", '<a class="top" href="#" aria-label="맨 위로" onclick="window.scrollTo(0,0);return false">↑</a>');
+  };
+  /* ---------- 로그인·마이페이지(10/19: 기획 P05 GNB·P10 로그인 + 업계 방식 — 오른쪽 위 Log In → 로그인 후 이름 드롭다운) ----------
+     데모라 실제 인증은 없다. 이 브라우저에 사용자 이름·포트폴리오·관심 목록을 저장 */
+  BI.user = function () { return S.load("user", null); };
+  BI.here = function () { return (location.pathname.split("/").pop() || "index.html") + location.search; };
+  BI.toLogin = function () { location.href = "login.html?next=" + encodeURIComponent(BI.here()); };
+  BI.need = function () { if (BI.user()) return true; BI.toLogin(); return false; };
+  BI.watch = function () { return S.load("watch", []); };
+  BI.favs = function () { return S.load("fav_artists", []); };
+  BI.snap = function (id) {     // 담을 때 제목·사진을 함께 저장(마이페이지 목록을 데이터 없이 바로 그리기 위해)
+    var c = document.querySelector('.ca[data-id="' + id + '"]'), o = {};
+    if (c) { o.t = (c.querySelector(".ti") || {}).textContent; var im = c.querySelector("img"); o.img = im && im.getAttribute("src"); }
+    else { var h = document.querySelector(".cap h2"), im2 = document.querySelector(".ad .pic img"); if (h) o.t = h.textContent; if (im2) o.img = im2.getAttribute("src"); }
+    return o;
+  };
+  BI.watchToggle = function (aid, id, extra) {
+    if (!BI.need()) return false;
+    var w = BI.watch(), i = w.findIndex(function (x) { return x.id === id; });
+    if (i >= 0) { w.splice(i, 1); S.save("watch", w); return false; }
+    w.unshift(Object.assign({ aid: aid, id: id, at: BI.TODAY }, BI.snap(id), extra || {})); S.save("watch", w); return true;
+  };
+  BI.inWatch = function (id) { return BI.watch().some(function (x) { return x.id === id; }); };
+  BI.favToggle = function (aid) {
+    if (!BI.need()) return false;
+    var f = BI.favs(), i = f.indexOf(aid);
+    if (i >= 0) { f.splice(i, 1); S.save("fav_artists", f); return false; }
+    f.unshift(aid); S.save("fav_artists", f); return true;
+  };
+  /* 알림 = 관심 작품·포트폴리오 작품·관심 작가의 최근 6개월 마켓무버(마켓무버는 대표작에서만 계산 — 시세로직 '필요한 데이터') */
+  BI.alerts = function () {
+    var M = window.SAB_MOVERS || [], ids = {}, names = {};
+    BI.watch().concat(S.pf()).forEach(function (x) { ids[x.id] = 1; });
+    BI.favs().forEach(function (k) { var a = BI.art(k); if (a) names[a.name] = 1; });
+    return M.filter(function (m) { return m.d >= "2026-04" && (ids[m.work] || names[m.artist_name]); });
+  };
+  BI.acct = function () {
+    var u = BI.user();
+    if (!u) return '<a class="login" href="login.html?next=' + encodeURIComponent(BI.here()) + '">Log In</a>';
+    var pf = S.pf(), val = pf.filter(function (x) { return x.sel; }).length;
+    return '<a class="bell" href="portfolio.html?tab=alerts" aria-label="알림">' + sv('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>') + '<em data-alerts hidden></em></a>' +
+      '<div class="acct"><a class="who" href="#" data-acct role="button" aria-haspopup="true">' + BI.ic.user + "<span>" + esc(u.name) + '</span> ▾</a><div class="dd"><p class="nm">' + esc(u.name) + '<small>blueIndex Demo</small></p>' +
+      '<a href="portfolio.html">My Portfolio<em>' + pf.length + '</em></a><a href="portfolio.html?tab=val">내 평가 기록<em>' + val + '</em></a><a href="portfolio.html?tab=watch">관심 작품<em>' + BI.watch().length + '</em></a><a href="portfolio.html?tab=artists">관심 작가<em>' + BI.favs().length + '</em></a><a href="portfolio.html?tab=alerts">알림</a><a href="#" data-logout class="out">Log Out</a></div></div>';
+  };
+  BI.bindAcct = function () {
+    if (BI._acct) return; BI._acct = 1;
+    document.addEventListener("click", function (e) {
+      var t = e.target.closest("[data-acct]");
+      document.querySelectorAll(".acct.on").forEach(function (x) { if (!t || x !== t.parentNode) x.classList.remove("on"); });
+      if (t) { e.preventDefault(); t.parentNode.classList.toggle("on"); }
+      if (e.target.closest("[data-logout]")) { e.preventDefault(); S.save("user", null); location.href = "index.html"; }
+    });
+    if (BI.user()) {
+      var fill = function () { var n = BI.alerts().length; document.querySelectorAll("[data-alerts]").forEach(function (x) { x.textContent = n; x.hidden = !n; }); };
+      if (window.SAB_MOVERS) fill(); else S.need("movers").then(fill).catch(function () {});
+    }
   };
   /* 작가 자동완성(기획 메인: 3글자 이상, 일치 부분 굵게) */
   BI.match = function (s) {
@@ -218,6 +277,8 @@
   };
   /* 포트폴리오 담기(카드·상세 공통) */
   BI.pfToggle = function (aid, id, extra) {
+    if (!BI.need()) return false;
+    extra = Object.assign(BI.snap(id), extra || {});
     var p = S.pf(), i = p.findIndex(function (x) { return x.id === id; });
     if (i >= 0) { p.splice(i, 1); S.save("pf", p); return false; }
     p.unshift(Object.assign({ aid: aid, id: id, at: BI.TODAY }, extra || {})); S.save("pf", p); return true;
