@@ -274,7 +274,9 @@ body{background:#fff;color:#444;font:14px/1.5 var(--sans)}
 .lst .cnt{font-size:26px;font-weight:300;color:#222}.lst .cnt span{color:#c4c4c4;margin-left:10px}
 .lst .sort{font-size:13px;font-weight:600;color:#666;display:flex;gap:8px;align-items:center}
 .lst .sort select{border:0;border-bottom:1px dashed #666;background:none;font-size:13px;color:#2a6ab8;padding:2px 0;font-weight:400}
-.ms{column-width:228px;column-gap:20px}
+.ms{display:flex;gap:20px;align-items:flex-start}
+.ms .mc{flex:1 1 0;min-width:0}
+.ms .ca{display:block}
 .ca{break-inside:avoid;display:inline-block;width:100%;margin-bottom:20px;background:#fff;border:1px solid #e6e6e6;box-shadow:1px 1px 1px rgba(0,0,0,.15);padding:10px;transition:box-shadow .2s;animation:fi .5s}
 @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .ca:hover{border-color:#c1c1c1;box-shadow:4px 4px 0 rgba(0,0,0,.15)}
@@ -307,7 +309,7 @@ body{background:#fff;color:#444;font:14px/1.5 var(--sans)}
 .vw{display:inline-flex;border:1px solid #bbb;margin-left:14px;vertical-align:6px}.vw a{font-size:12px;padding:3px 10px;color:#888;cursor:pointer}.vw a.on{background:#3a2f22;color:#fff}
 .gh table{width:100%;border-collapse:collapse;font-size:13px}.gh th{text-align:left;font-size:11px;color:#888;border-bottom:2px solid #444;padding:8px 6px}.gh td{border-bottom:1px solid #eee;padding:8px 6px}.gh tr.me td{background:#fff7e8}
 .ca .ah{font-size:11px;color:#999;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:6px}
-@media(max-width:760px){.ms{column-width:150px;column-gap:10px}.ca{padding:7px;margin-bottom:10px}.ca .ai p{flex-wrap:wrap;gap:0 6px}.ca .ai .pr{font-size:13px}.ca .ai .pc,.ca .ai .bd{width:auto}.ca .ti{font-size:13px}}
+@media(max-width:760px){.ms{gap:10px}.ca{padding:7px;margin-bottom:10px}.ca .ai p{flex-wrap:wrap;gap:0 6px}.ca .ai .pr{font-size:13px}.ca .ai .pc,.ca .ai .bd{width:auto}.ca .ti{font-size:13px}}
 .dark .ca{border-color:#000;box-shadow:4px 4px 0 rgba(0,0,0,.5)}
 
 /* 경매 상세(기획 P20~28) */
