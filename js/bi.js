@@ -195,6 +195,27 @@
       if (todo.length) setTimeout(step, 0);
     })();
   };
+  /* 제작그룹 카드(10/19 운영자 결정: 같은 판본의 여러 장·여러 경매를 한 장으로 — 시세도 그룹 단위로 계산되므로)
+     rows = 그 제작그룹의 모든 경매 기록, hit = 지금 필터에 걸린 기록 수 */
+  BI.isEd = function (r) { return r.grp && String(r.grp).charAt(0) === "g"; };
+  BI.gcard = function (aid, g, q) {
+    var rows = g.rows.slice().sort(function (x, y) { return x.date < y.date ? 1 : -1; });
+    var sold = rows.filter(function (r) { return r.status === "sold" && r.price; });
+    var rp = sold.filter(function (r) { return r.img; })[0] || rows.filter(function (r) { return r.img; })[0] || rows[0], last = sold[0];
+    var cc = {}; rows.forEach(function (r) { if (r.cat && r.cat !== "other" && r.cat !== "digital") cc[r.cat] = (cc[r.cat] || 0) + 1; });
+    var gcat = Object.keys(cc).sort(function (x, y) { return cc[y] - cc[x]; })[0] || rp.cat;     // 그룹 다수 분류(잘못 분류된 랏 하나가 카드 분류가 되지 않게)
+    var gyr = rows.filter(function (r) { return r.year; }).map(function (r) { return r.year; }).sort()[0];
+    if (rows.length === 1 || !BI.isEd(rp)) return BI.card(aid, last || rp, q);
+    var ps = sold.map(function (r) { return r.price; }), mn = Math.min.apply(null, ps), mx = Math.max.apply(null, ps);
+    var ed = rows.filter(function (r) { return r.ed; })[0], cr = rows.filter(function (r) { return r.cr; })[0];
+    var warn = ps.length >= 2 && mx / mn > 10;
+    var tgt = last || rp, pin = S.inPf(tgt.id);
+    var l1 = last ? "<p><span>" + last.date.slice(0, 4) + '</span><span class="pr">' + BI.won(last.price) + '</span><span class="bd">' + BI.band(last.price, q) + "</span></p>" : '<p class="dd"><span>No sale</span><span class="pr">-</span></p>';
+    return '<a class="ca gc" href="artwork.html?a=' + aid + "&l=" + tgt.lot + '" data-lot="' + tgt.lot + '" data-id="' + esc(tgt.id) + '"><span class="th">' + BI.img(rp.img, rp.title) + '<span class="cb" title="BR Similar Auctions — 평가에 쓴 유사 경매 수">' + BI.ic.stack + '<em data-n style="font-style:normal">·</em></span><span class="ap' + (pin ? " in" : "") + '" role="button" aria-label="Add to Portfolio" data-pf>' + BI.ic.fold + "</span></span>" +
+      '<span class="ti">' + esc(rp.title || "Untitled") + '</span><p class="cg">' + esc(BI.cat(gcat)) + (gyr ? ", " + gyr : "") + (ed ? " · Edition of " + ed.ed : "") + (cr ? " · " + esc(cr.cr) : "") + '</p>' +
+      '<p class="gx"><b>' + rows.length + " Auction Records</b>" + (sold.length ? " · " + sold.length + " sold" : "") + (g.hit < rows.length ? ' <span class="mut">(' + g.hit + " 해당)</span>" : "") + (warn ? ' <span class="wn" title="같은 제작그룹 안 낙찰가 차이가 10배 넘음 — 색·판본이 다른 작품이 섞였을 수 있어 확인 필요">판본 확인 필요</span>' : "") + "</p>" +
+      '<div class="ai">' + l1 + (ps.length >= 2 ? '<p class="rng">' + BI.won(mn) + " ~ " + BI.won(mx) + "</p>" : "") + '<p class="lt" data-e><span>3 mon ago</span><span class="pr pending">…</span><span class="pc"></span></p></div></a>';
+  };
   /* 포트폴리오 담기(카드·상세 공통) */
   BI.pfToggle = function (aid, id, extra) {
     var p = S.pf(), i = p.findIndex(function (x) { return x.id === id; });
