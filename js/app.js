@@ -3,7 +3,7 @@
   var SAB = window.SAB = {};
   SAB.TODAY = "2026-10-18";
   SAB.CAT = { "paintings": "회화", "prints-and-multiples": "판화", "works-on-paper": "종이 작품", "sculpture": "조각", "photographs": "사진", "mixed-media": "혼합 재료", "other": "기타", "ceramics": "도자", "design": "디자인", "textiles": "직물", "digital": "디지털", "jewelry": "주얼리", "furniture": "가구", "": "미분류" };
-  SAB.GDESC = { S: "같은 작품의 이전 낙찰이 있어 가장 믿을 만함", A: "아주 비슷한 비교작 + 그림 닮음 + 최근 거래 충분", B: "비슷한 비교작 있음", C: "비교작 유사도 낮음 — 참고 범위로만", "보류": "근거가 부족해 값을 내지 않음" };
+  SAB.GDESC = { S: "같은 작품(같은 장)의 이전 낙찰이 있어 가장 믿을 만함", E: "같은 판본(같은 제작그룹)의 다른 장 낙찰이 있음 — 판화·멀티플 등 에디션 작품", A: "아주 비슷한 비교작 + 그림 닮음 + 최근 거래 충분", B: "비슷한 비교작 있음", C: "비교작 유사도 낮음 — 참고 범위로만", "보류": "근거가 부족해 값을 내지 않음" };
   SAB.q = function (k) { return new URLSearchParams(location.search).get(k); };
   SAB.esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   SAB.won = function (v) {

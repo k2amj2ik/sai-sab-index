@@ -356,6 +356,8 @@ body{background:#fff;color:#444;font:14px/1.5 var(--sans)}
 .thumbs img,.thumbs .noimg{width:28px;height:28px;object-fit:cover}
 .gr{display:inline-block;margin-left:8px;font-size:12px;border:1px solid #ccc;color:#666;padding:1px 7px;vertical-align:6px;border-radius:10px}
 .gr.S{border-color:var(--gold);color:var(--gold)}
+.gr.E{border-color:#b07a3c;color:#b07a3c}
+.sc .tag.ed{background:#b07a3c}
 @media(max-width:760px){
   .ad{padding-top:20px}.ad .w{grid-template-columns:1fr;gap:20px}
   .cap h2{font-size:24px}

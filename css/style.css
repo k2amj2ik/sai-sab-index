@@ -149,7 +149,7 @@ input,select{font:inherit;color:inherit}
 .loading i{width:18px;height:18px;border:2px solid #e8d4b8;border-top-color:var(--gold);border-radius:50%;animation:sp 0.8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .grade{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 8px;border-radius:13px;font-size:13px;font-weight:700;background:var(--gold);color:#fff;vertical-align:middle}
-.grade.gA{background:#c78d32}.grade.gB{background:#9a9a9a}.grade.gC{background:#c4c4c4}.grade.g보류{background:#fff;color:var(--mut);border:1px solid var(--line2)}
+.grade.gE{background:#b07a3c}.grade.gA{background:#c78d32}.grade.gB{background:#9a9a9a}.grade.gC{background:#c4c4c4}.grade.g보류{background:#fff;color:var(--mut);border:1px solid var(--line2)}
 
 /* 라이브 결과(Wiveel 상세_3) */
 .live{background:#fff;border-top:1px solid var(--line)}

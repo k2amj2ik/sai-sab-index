@@ -1,4 +1,4 @@
-/* SAB Index 계산 엔진 — 시험판 9회차 채택 규칙(4회차 틀 + 5·8·9회차 보정)(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
+/* SAB Index 계산 엔진 — 시험판 10회차 채택 규칙(4회차 틀 + 5·8·9회차 보정 + 10회차 제작그룹)(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
    브라우저에서 작가 거래 기록(data/lots/a{작가}.js)만으로 오늘 평가가격·근거 작품·흐름을 계산한다.
    단어 판정(kind)·재질/제목 단어·경매사 급(tier)은 데이터 쪽에서 미리 계산해 넣었다. */
 (function (root) {
@@ -117,28 +117,32 @@
   E.estimate = function (D, t, cands, asof, opt) {
     opt = opt || {}; var mode = opt.mode || "all";
     var tk = t.kind;
-    cands = cands.filter(function (c) { return c.kind === tk; });
-    if (opt.filter) cands = cands.filter(function (c) { return c.id === t.id || opt.filter(c); });
+    /* 10회차 채택(10a): 같은 제작그룹(판화·멀티플 등 에디션, "g…")이면 같은 작품으로 계산. 등급은 같은 장(S)과 같은 판본(E)으로 나눔 */
+    var tg = t.grp && String(t.grp).charAt(0) === "g" ? t.grp : null;
+    function sameOf(c) { return c.id === t.id || (!!tg && c.grp === tg); }
+    function trueSame(c) { return c.id === t.id || (!!t.cid && String(t.cid).indexOf("#") >= 0 && c.cid === t.cid); }
+    cands = cands.filter(function (c) { return c.kind === tk || (!!tg && c.grp === tg); });
+    if (opt.filter) cands = cands.filter(function (c) { return sameOf(c) || opt.filter(c); });
     var sold = cands.filter(function (c) { return c.status === "sold" && c.price; });
     if (sold.length) { var med0 = median(sold.map(function (c) { return c.price; })); if (tk !== "goods") sold = sold.filter(function (c) { return c.price >= med0 / 10; }); }
     var sold5 = sold.filter(function (c) { return years(asof, c.date) <= 5; }).length;
-    var same = sold.filter(function (c) { return c.id === t.id; });
-    var out = { sold5: sold5, kind: tk, same_n: same.length };
+    var same = sold.filter(sameOf);
+    var out = { sold5: sold5, kind: tk, same_n: same.length, same_true: same.filter(trueSame).length };
     if (tk === "goods" || (sold5 < 3 && !same.length)) { out.shown = false; out.reason = tk === "goods" ? "굿즈" : "근거 부족"; return out; }
     var use = sold.map(function (c) { return [c, c.price]; });
-    if (mode !== "none") cands.forEach(function (c) { if (c.status === "passed" && c.lo && (mode === "all" || c.id === t.id)) use.push([c, c.lo * 0.9]); });
-    if (t.area) use = use.filter(function (u) { return u[0].area || u[0].id === t.id; });
+    if (mode !== "none") cands.forEach(function (c) { if (c.status === "passed" && c.lo && (mode === "all" || sameOf(c))) use.push([c, c.lo * 0.9]); });
+    if (t.area) use = use.filter(function (u) { return u[0].area || sameOf(u[0]); });
     if (!use.length) { out.shown = false; out.reason = "근거 부족"; return out; }
     var b = sizeExponent(cands), tf = tierFactor(sold, b), tt = t.tier;
-    var scored = use.map(function (u) { var c = u[0]; return [c.id === t.id ? SAME_SIM : simV3(D, t, c, asof), c, u[1]]; });
+    var scored = use.map(function (u) { var c = u[0]; return [sameOf(c) ? SAME_SIM : simV3(D, t, c, asof), c, u[1]]; });
     scored.sort(function (x, y) { return y[0] - x[0]; });
     var g = recentTrend(D, asof);
-    function adj(c, p) { if (c.id === t.id) return g ? p * Math.exp(g * Math.min(3, years(asof, c.date))) : p; /* 5회차: 같은 작품은 크기·경매사 급 보정 없음 / 8회차: 최근 2년 흐름만 */ var f = (t.area && c.area) ? Math.pow(t.area / c.area, b) : 1; if (c.tier !== tt) f *= tt === "major" ? tf : 1 / tf; return p * f; }
+    function adj(c, p) { if (sameOf(c)) return g ? p * Math.exp(g * Math.min(3, years(asof, c.date))) : p; /* 5회차: 같은 작품은 크기·경매사 급 보정 없음 / 8회차: 최근 2년 흐름만 */ var f = (t.area && c.area) ? Math.pow(t.area / c.area, b) : 1; if (c.tier !== tt) f *= tt === "major" ? tf : 1 / tf; return p * f; }
     var pool = scored.slice(0, POOLK);
     if (opt.exclude) pool = scored.filter(function (x) { return !opt.exclude[x[1].lot]; }).slice(0, POOLK);
     var vals = pool.map(function (x) { return [adj(x[1], x[2]), x[0], x[1], x[2]]; });
     var med = median(vals.map(function (v) { return v[0]; }));
-    var kept = vals.filter(function (x) { return x[2].id === t.id || (med / 3 <= x[0] && x[0] <= med * 3); }).slice(0, K);
+    var kept = vals.filter(function (x) { return sameOf(x[2]) || (med / 3 <= x[0] && x[0] <= med * 3); }).slice(0, K);
     if (!kept.length) kept = vals.slice(0, K);
     if (opt.include) scored.forEach(function (x) { if (opt.include[x[1].lot] && !kept.some(function (k) { return k[2].lot === x[1].lot; })) kept.push([adj(x[1], x[2]), x[0], x[1], x[2]]); });
     var pts = kept.map(function (k) { return k[0]; }), q = pts.length >= 2 ? quartiles(pts) : [pts[0], pts[0], pts[0]];
@@ -150,16 +154,17 @@
     out.sc = 1;
     if (!same.length && !opt.noSC) { var f = selfCal(D, asof); out.sc = f; out.point *= f; out.lo *= f; out.hi *= f; }
     out.top_sim = Math.round(Math.min(top[1], 1) * 100) / 100;
-    out.img = top[2].id === t.id ? 1 : (IMG_CATS[t.cat] ? imgSim(D, t.id, top[2].id) : null);
-    out.used = kept.map(function (k) { return { c: k[2], adj: k[0], sim: k[1], price: k[3] }; });
+    out.img = sameOf(top[2]) ? 1 : (IMG_CATS[t.cat] ? imgSim(D, t.id, top[2].id) : null);
+    out.used = kept.map(function (k) { return { c: k[2], adj: k[0], sim: k[1], price: k[3], same: sameOf(k[2]), ed: sameOf(k[2]) && !trueSame(k[2]) }; });
     var usedLots = {}; kept.forEach(function (k) { usedLots[k[2].lot] = 1; });
-    out.more = scored.filter(function (x) { return !usedLots[x[1].lot]; }).slice(0, 40).map(function (x) { return { c: x[1], adj: adj(x[1], x[2]), sim: x[0], price: x[2] }; });
+    out.more = scored.filter(function (x) { return !usedLots[x[1].lot]; }).slice(0, 40).map(function (x) { return { c: x[1], adj: adj(x[1], x[2]), sim: x[0], price: x[2], same: sameOf(x[1]), ed: sameOf(x[1]) && !trueSame(x[1]) }; });
     if (!out.shown) out.reason = "최근 5년 같은 종류 낙찰 " + sold5 + "건(10건 미만)";
     return out;
   };
   E.grade = function (e) {
     if (!e.shown) return "보류";
-    if (e.same_n) return "S";
+    if (e.same_true) return "S";
+    if (e.same_n) return "E";            // 10회차: 같은 판본(제작그룹)의 다른 장 낙찰만 있음
     if (e.top_sim >= 0.8 && (e.img === null || e.img === undefined || e.img >= 0.7) && e.sold5 >= 20) return "A";
     return e.top_sim >= 0.7 ? "B" : "C";
   };
