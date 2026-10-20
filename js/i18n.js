@@ -47,7 +47,7 @@
     "My Collection": "내 컬렉션", "I Own This": "내 작품으로 등록", "In My Collection": "내 컬렉션에 있음", "Add to Watchlist": "관심 작품에 담기", "Added to Watchlist": "관심 작품에 담음",
     "+ Register My Artwork": "+ 소장 작품 등록", "Register My Artwork": "소장 작품 등록", "Edit My Artwork": "소장 작품 수정", "Import CSV": "CSV 가져오기", "Backup": "백업 내려받기", "Restore": "백업 불러오기",
     "Register": "등록", "Save": "저장", "Edit": "수정", "Delete": "삭제", "Find in SAB DB": "SAB DB에서 같은 작품 찾기", "Saved": "저장함",
-    "Artist *": "작가 *", "Title *": "작품명 *", "Category *": "분류 *", "Size (cm)": "크기 (cm)", "Edition": "에디션", "Signature": "서명", "Condition": "상태",
+    "Artist *": "작가 *", "Title *": "작품명 *", "Category *": "분류 *", "Size (cm)": "크기 (cm)", "Edition": "에디션", "Signature": "서명", "Signature Details": "서명 자세히", "Signed and numbered": "서명·에디션 번호 있음", "Signed": "서명 있음", "Unsigned": "서명 없음", "Stamped": "도장·스탬프", "Condition": "상태",
     "Where Purchased": "구입처", "Purchase Date": "구입일", "Purchase Price (₩, optional)": "구입가 (₩, 선택)", "My Price Reference (₩, optional)": "내가 아는 시세 (₩, 선택)", "Photos (최대 3장)": "사진 (최대 3장)", "Memo": "메모",
     "Artist": "작가", "Purchase Price": "구입가", "My Price Reference": "내가 아는 시세",
     "Mixed Media": "혼합 재료", "Design · Art Toy": "디자인·아트토이", "Goods (굿즈)": "굿즈", "Not Artwork (시계·기타)": "미술품 아님(시계·기타)",
