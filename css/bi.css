@@ -478,6 +478,8 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 .sellt .fee{max-width:300px;color:#444;line-height:1.5}.sellt .src{font-size:11px;color:#2a6ab8;text-decoration:underline}.sellt .go{display:inline-block;background:#111;color:#fff;padding:6px 10px;font-size:12px;white-space:nowrap}
 .sellt td[data-l]::before{content:none}
 @media(max-width:760px){.mo .bx.lg{padding:26px 18px}.sellt,.sellt tbody,.sellt tr,.sellt td{display:block;width:100%}.sellt tr:first-child{display:none}.sellt tr{border-bottom:1px solid #ddd;padding:10px 0}.sellt td{border:0;padding:3px 0;text-align:left!important;white-space:normal!important;max-width:none!important}.sellt td[data-l]::before{content:attr(data-l) " : ";color:#999;font-size:12px}.sellt td br{display:none}.sellt td .mut{margin-left:6px}.sellt .go{margin-top:6px}}
+.ctip{position:absolute;z-index:5;background:#111;color:#fff;font-size:12px;line-height:1.55;padding:9px 12px;min-width:170px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.ctip b{display:block;font-size:13px;margin-bottom:2px}.ctip span{display:block;color:#ccc}.ctip em{font-style:normal;color:#fff;font-weight:600}.ctip em.up{color:#7ddc3c}.ctip em.down{color:#ff8a7a}.ctip .sp{color:#7fd3f7}
 .mo .note2{font-size:12px;color:#888;margin-top:12px;line-height:1.6}
 .tips .sellgo{display:block;margin:14px 0 30px;background:#e05b4a;color:#fff;font-size:15px;font-weight:600;padding:10px 18px}
 .ms.dark{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));align-items:start}
