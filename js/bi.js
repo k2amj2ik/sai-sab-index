@@ -36,7 +36,13 @@
   BI.q = S.q;
   /* 작가 사진: 자유 이용 허락(퍼블릭 도메인·CC0·CC BY·CC BY-SA) 사진만, 없으면 이름 첫 글자 */
   BI.credit = function (a) { var p = a && a.photo; return p ? "사진: " + (p.author || "작자 미상") + " · " + (p.license || "") + " · 위키미디어 공용" : ""; };
-  BI.ph = function (a, cls) { var p = a && a.photo; return p ? '<span class="' + (cls || "ph") + '" title="' + esc(BI.credit(a)) + '"><img src="' + esc(p.src) + '" alt="' + esc(BI.en(a)) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>' : '<span class="' + (cls || "ph") + '">' + esc(BI.en(a).slice(0, 1)) + "</span>"; };
+  /* 작가 이미지: 얼굴 사진(자유 이용 허락·작고 작가만) → 없으면 대표작(최근 5년 최고 낙찰작, 화풍/시리즈 검수도구 썸네일, 10/20) → 없으면 머리글자 */
+  BI.ph = function (a, cls) {
+    var p = a && a.photo, r = a && a.rep, c = cls || "ph";
+    if (p) return '<span class="' + c + '" title="' + esc(BI.credit(a)) + '"><img src="' + esc(p.src) + '" alt="' + esc(BI.en(a)) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>';
+    if (r) return '<span class="' + c + ' rep" title="' + esc("대표작: " + (r.title || "") + (r.year ? ", " + r.year : "")) + '"><img src="' + esc(r.img) + '" alt="' + esc(BI.en(a)) + ' 대표작" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.remove()"></span>';
+    return '<span class="' + c + '">' + esc(BI.en(a).slice(0, 1)) + "</span>";
+  };
   BI.forSale = function (r) { return r.status === "upcoming" && BI.dd(r.date) >= 0; };   // 경매일이 지난 upcoming = 결과 미반영(Pending) — Only for Sale·Available Works에서 뺌
 
   /* ---------- 아이콘(기획서 그림의 globe·pin·겹친 사각형·폴더+ 등) ---------- */
