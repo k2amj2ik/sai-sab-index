@@ -376,7 +376,8 @@ body{background:#fff;color:#444;font:14px/1.5 var(--sans)}
 .flay .bar em{position:absolute;top:-34px;transform:translateX(-50%);background:#fff;color:#000;font-style:normal;font-size:12px;padding:2px 8px;transition:left .25s}
 .flay ol li{display:flex;align-items:center;gap:16px;font-size:24px;font-weight:300;padding:6px 0;opacity:.35;transition:opacity .3s}
 .flay ol li.on{opacity:1}
-.flay ol li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flay ol li span{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;word-break:break-word}   /* 재질 등 긴 글은 2줄까지(10/20 운영자) */
+.ot th.md{max-width:220px;line-height:1.35}.ot th.md span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
 .flay ol li em{font-style:normal;font-size:16px;color:#ccc;width:90px;text-align:right}
 .flay ol li b{width:56px;text-align:right;font-weight:400}
 @media(max-width:760px){.flay h3{font-size:22px}.flay ol li{font-size:16px;gap:8px}.flay ol li em{font-size:12px;width:64px}.flay ol li b{width:44px}}
