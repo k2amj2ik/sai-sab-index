@@ -174,6 +174,9 @@
   C.usedKB = function () { var n = 0; try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); n += (localStorage.getItem(k) || "").length + k.length; } } catch (e) {} return Math.round(n * 2 / 1024); };
 
   /* 판매하러 가기 — 이 작가 작품을 다룬 경매사(최근 5년 5건 이상, SAB DB) + 경매사 판매 수수료·의뢰 주소(data/houses.js) */
+  /* 10/20 운영자: 같은 경매사라도 도시마다 가격이 다름 → 경매사 + 도시 단위로 비교 */
+  C.place = function (x) { var c = x.city || "", k = x.ctry || ""; return c && k && c !== k ? c + ", " + k : (c || k || "도시 미상"); };
+  C.hkey = function (x) { return x.house + "|" + (x.city || ""); };
   C.houseRows = function (a, by) {
     var H = window.SAB_HOUSES || {}, rows = ((a && a.houses) || []).map(function (x) { return Object.assign({}, x, { info: H[x.house] || {} }); });
     var key = { n: function (x) { return x.n; }, tv: function (x) { return x.tv; }, rate: function (x) { return x.rate; }, rel: function (x) { return x.rel == null ? -9 : x.rel; } }[by || "tv"];
