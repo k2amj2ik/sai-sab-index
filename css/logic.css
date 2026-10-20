@@ -26,3 +26,5 @@
 .doc th{background:#f6f6f6;font-weight:600;color:#222}
 .doc .box{background:#f7f7f7;border-left:4px solid var(--gold);padding:14px 18px;margin:14px 0}
 .doc .scrollx{overflow-x:auto}
+
+.tt .lang{margin-left:auto;display:flex;align-items:center;gap:2px}.tt .lang a{padding:2px 8px;border:1px solid #555;border-bottom:1px solid #555;height:auto;font-size:12px;cursor:pointer}.tt .lang a.on{background:#fff;color:#000;border-color:#fff}
