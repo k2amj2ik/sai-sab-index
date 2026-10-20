@@ -14,6 +14,38 @@
   C.del = function (hid) { return BI.saveHoldings(C.list().filter(function (h) { return h.hid !== hid; })); };
   C.newId = function () { return "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); };
 
+  /* ---------- 3단계(10/20): 컨설턴트 보기 — 같은 바탕(소장 작품)에 '누구의 컬렉션인가'(owner)만 다르게 ----------
+     owner 없음 = 내 컬렉션, owner = 고객 id. 고객은 데모라 가상 고객만(운영자 결정). */
+  C.of = function (cid) { return C.list().filter(function (h) { return cid ? h.owner === cid : !h.owner; }); };
+  C.saveClients = function (v) { S.save("clients", v); };
+  C.addClient = function (name, memo) { var L = BI.clients(), c = { cid: "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name, memo: memo || "", at: BI.TODAY }; L.push(c); C.saveClients(L); return c; };
+  C.delClient = function (cid) { C.saveClients(BI.clients().filter(function (c) { return c.cid !== cid; })); BI.saveHoldings(C.list().filter(function (h) { return h.owner !== cid; })); };
+  C.ownerName = function (h) { if (!h.owner) return "My Collection"; var c = BI.client(h.owner); return c ? c.name : "(지운 고객)"; };
+  /* 가상 고객 2명 — 대표작(SAB_WORKS, 평가 S·A 등급) 중에서 성격이 다른 두 묶음. 구입가는 지금 평가의 일정 비율로 지어 넣음(가상) */
+  C.seedClients = function () {
+    var W = (window.SAB_WORKS || []).filter(function (w) { return w.img && (w.grade === "S" || w.grade === "A" || w.grade === "E"); });
+    var nat = function (w) { var a = BI.art(w.artist), n = a && a.info && a.info.nat || ""; return /Korea/.test(n); };
+    function pick(f, n) { var seen = {}, out = []; W.forEach(function (w) { if (out.length < n && f(w) && !seen[w.artist]) { seen[w.artist] = 1; out.push(w); } }); return out; }
+    var A = pick(function (w) { return nat(w) && w.cat === "paintings"; }, 5), B = pick(function (w) { return !nat(w) && w.cat === "prints-and-multiples"; }, 6);
+    var RATE = [0.62, 0.85, 1.12, 0.74, 1.3, 0.93];
+    function mk(w, cid, i) { var a = BI.art(w.artist), sz = (w.size || "").match(/[\d.]+/g) || []; return { hid: C.newId() + i, at: BI.TODAY, src: "sample", owner: cid, aid: w.artist, artist: a ? BI.en(a) : w.artist_name, wid: w.id, t: w.title, year: w.year, cat: w.cat, img: w.img, w: +sz[0] || null, h: +sz[1] || null, buyPrice: w.v ? Math.round(w.v * RATE[i % RATE.length] / 1e4) * 1e4 : null, buyAt: (2016 + i * 2) + "-0" + (i + 3) + "-15", photos: [], memo: "가상 고객 데이터(데모)", sale: { st: i === 1 ? "asked" : "hold", check: {}, log: i === 1 ? [{ st: "asked", at: "2026-10-12", note: "고객 판매 의사 확인 후 문의", house: "" }] : [] } }; }
+    var ca = C.addClient("Client A (가상)", "국내 블루칩 회화 중심 · 장기 보유 성향"), cb = C.addClient("Client B (가상)", "해외 판화·멀티플 중심 · 회전 거래 성향");
+    var L = C.list().concat(A.map(function (w, i) { return mk(w, ca.cid, i); }), B.map(function (w, i) { return mk(w, cb.cid, i); }));
+    BI.saveHoldings(L); return [ca, cb];
+  };
+  /* 컬렉션 하나 요약(고객 비교·컬렉션 머리) */
+  C.summary = function (list) {
+    return Promise.all(list.map(function (h) { return Promise.all([C.estimate(h), C.estimate1y(h)]).then(function (x) { return { h: h, R: x[0], v1: x[1] }; }); })).then(function (W) {
+      W.forEach(function (w) { w.v = w.R.ok ? w.R.e.point : null; w.a = w.R.a || null; w.chg = w.v && w.v1 ? w.v / w.v1 - 1 : null; });
+      var ok = W.filter(function (w) { return w.v; }), both = W.filter(function (w) { return w.v && w.v1; }), bought = W.filter(function (w) { return w.v && w.h.buyPrice; });
+      var sum = function (L, f) { return L.reduce(function (s, w) { return s + f(w); }, 0); };
+      var byA = {}; ok.forEach(function (w) { if (w.a) byA[w.a.id] = (byA[w.a.id] || 0) + w.v; });
+      var tot = sum(ok, function (w) { return w.v; }), topA = Object.keys(byA).sort(function (x, y) { return byA[y] - byA[x]; })[0];
+      var base = sum(both, function (w) { return w.v1; }), bSum = sum(bought, function (w) { return w.h.buyPrice; }), bVal = sum(bought, function (w) { return w.v; });
+      return { W: W, ok: ok, tot: tot, both: both, dv: sum(both, function (w) { return w.v - w.v1; }), pc: base ? sum(both, function (w) { return w.v; }) / base - 1 : null, bought: bought, bSum: bSum, bVal: bVal, bpc: bSum ? bVal / bSum - 1 : null, selling: W.filter(function (w) { var s = C.status(w.h); return s !== "hold" && s !== "paid" && s !== "sold"; }).length, top: topA ? { a: BI.art(topA), share: byA[topA] / (tot || 1) } : null };
+    });
+  };
+
   /* 분류 — SAB DB 분류 키 + '미술품 아님'(시계·생활 굿즈 등: 평가 대상 아님) */
   C.CATS = [["paintings", "Paintings"], ["prints-and-multiples", "Prints and Multiples"], ["works-on-paper", "Works on Paper"], ["sculpture", "Sculpture"], ["photographs", "Photographs"], ["mixed-media", "Mixed Media"], ["design", "Design · Art Toy"], ["goods", "Goods (굿즈)"], ["notart", "Not Artwork (시계·기타)"]];
   C.catName = function (k) { var x = C.CATS.filter(function (c) { return c[0] === k; })[0]; return x ? x[1] : (k || "-"); };
@@ -124,7 +156,7 @@
 
   /* 백업 — 이 브라우저 기록이 지워지면 사라지므로 파일로 내려받아 둔다 */
   C.backup = function () {
-    var data = { kind: "blueIndex-collection", ver: 1, at: new Date().toISOString(), holdings: C.list(), evals: BI.evals(), watch: BI.watch(), fav_artists: BI.favs() };
+    var data = { kind: "blueIndex-collection", ver: 1, at: new Date().toISOString(), holdings: C.list(), clients: BI.clients(), evals: BI.evals(), watch: BI.watch(), fav_artists: BI.favs() };
     var b = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), u = URL.createObjectURL(b), l = document.createElement("a");
     l.href = u; l.download = "blueIndex_my_collection_" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + ".json"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 2000);
   };
@@ -133,6 +165,7 @@
     var cur = mode === "replace" ? [] : C.list(), have = {}; cur.forEach(function (h) { have[h.hid] = 1; });
     (d.holdings || []).forEach(function (h) { if (!have[h.hid]) cur.push(h); });
     if (!BI.saveHoldings(cur)) throw new Error("브라우저 저장 공간이 부족합니다(사진을 줄이거나 지워 주세요)");
+    if (d.clients) { var cl = mode === "replace" ? [] : BI.clients(); d.clients.forEach(function (c) { if (!cl.some(function (x) { return x.cid === c.cid; })) cl.push(c); }); C.saveClients(cl); }
     if (d.evals) S.save("evals", mode === "replace" ? d.evals : BI.evals().concat(d.evals.filter(function (x) { return !BI.evalOf(x.id); })));
     if (d.watch) S.save("watch", mode === "replace" ? d.watch : BI.watch().concat(d.watch.filter(function (x) { return !BI.inWatch(x.id); })));
     if (d.fav_artists) S.save("fav_artists", mode === "replace" ? d.fav_artists : BI.favs().concat(d.fav_artists.filter(function (x) { return BI.favs().indexOf(x) < 0; })));

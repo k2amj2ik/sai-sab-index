@@ -53,7 +53,8 @@
     "Mixed Media": "혼합 재료", "Design · Art Toy": "디자인·아트토이", "Goods (굿즈)": "굿즈", "Not Artwork (시계·기타)": "미술품 아님(시계·기타)",
     "Excellent": "아주 좋음", "Good": "좋음", "Fair": "보통", "Poor": "나쁨", "Unknown": "모름",
     "Holding": "보유 중", "Preparing": "판매 준비", "Inquiry Sent": "문의 보냄", "Estimate Received": "추정가 받음", "Consigned": "위탁 계약", "Listed": "출품 확정", "Sold": "낙찰", "Unsold": "유찰", "Settled": "정산 완료",
-    "There is no artwork in your collection yet.": "아직 등록한 소장 작품이 없습니다.", "Actual Change": "실제 변화", "vs Purchase Price": "구입가 대비", "Noteworthy Movers": "눈에 띄는 변동", "For 1 Year": "1년",
+    "Clients": "고객 컬렉션", "+ Register Client Artwork": "+ 고객 작품 등록", "Register Client Artwork": "고객 작품 등록", "Edit Artwork": "작품 수정", "Viewing": "보는 컬렉션", "+ Add Client": "+ 고객 추가", "Delete Client": "고객 삭제",
+    "There is no artwork in your collection yet.":"아직 등록한 소장 작품이 없습니다.", "Actual Change": "실제 변화", "vs Purchase Price": "구입가 대비", "Noteworthy Movers": "눈에 띄는 변동", "For 1 Year": "1년",
     // 시세로직 탭
     "Reliability": "신뢰도", "Market Movers": "마켓무버"
   };

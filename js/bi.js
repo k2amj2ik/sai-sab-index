@@ -101,7 +101,10 @@
     S.save("watch", w); S.save("evals", ev); S.save("pf", []);
   })();
   BI.evalOf = function (id) { return BI.evals().filter(function (x) { return x.id === id; })[0]; };
-  BI.ownedOf = function (id) { return BI.holdings().filter(function (h) { return h.wid === id; })[0]; };
+  BI.ownedOf = function (id) { return BI.holdings().filter(function (h) { return h.wid === id && !h.owner; })[0]; };
+  /* 10/20 3단계: 컨설턴트 보기 — 고객(가상)별 컬렉션. 소장 작품의 owner = 고객 id(없으면 내 것) */
+  BI.clients = function () { return S.load("clients", []); };
+  BI.client = function (cid) { return BI.clients().filter(function (c) { return c.cid === cid; })[0]; };
   BI.favs = function () { return S.load("fav_artists", []); };
   BI.snap = function (id) {     // 담을 때 제목·사진을 함께 저장(마이페이지 목록을 데이터 없이 바로 그리기 위해)
     var c = document.querySelector('.ca[data-id="' + id + '"]'), o = {};
@@ -132,10 +135,10 @@
   BI.acct = function () {
     var u = BI.user();
     if (!u) return '<a class="login" href="login.html?next=' + encodeURIComponent(BI.here()) + '">Log In</a>';
-    var hold = BI.holdings().length, val = BI.evals().length;
+    var hold = BI.holdings().filter(function (h) { return !h.owner; }).length, val = BI.evals().length, ncl = BI.clients().length;
     return '<a class="bell" href="portfolio.html?tab=alerts" aria-label="알림">' + sv('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>') + '<em data-alerts hidden></em></a>' +
       '<div class="acct"><a class="who" href="#" data-acct role="button" aria-haspopup="true">' + BI.ic.user + "<span>" + esc(u.name) + '</span> ▾</a><div class="dd"><p class="nm">' + esc(u.name) + '<small>blueIndex Demo</small></p>' +
-      '<a href="portfolio.html">My Collection<em>' + hold + '</em></a><a href="portfolio.html?tab=val">내 평가 기록<em>' + val + '</em></a><a href="portfolio.html?tab=watch">관심 작품<em>' + BI.watch().length + '</em></a><a href="portfolio.html?tab=artists">관심 작가<em>' + BI.favs().length + '</em></a><a href="portfolio.html?tab=alerts">알림</a><a href="#" data-logout class="out">Log Out</a></div></div>';
+      '<a href="portfolio.html">My Collection<em>' + hold + '</em></a><a href="portfolio.html?tab=clients">Clients<em>' + ncl + '</em></a><a href="portfolio.html?tab=val">평가 기록<em>' + val + '</em></a><a href="portfolio.html?tab=watch">관심 작품<em>' + BI.watch().length + '</em></a><a href="portfolio.html?tab=artists">관심 작가<em>' + BI.favs().length + '</em></a><a href="portfolio.html?tab=alerts">알림</a><a href="#" data-logout class="out">Log Out</a></div></div>';
   };
   BI.bindAcct = function () {
     if (BI._acct) return; BI._acct = 1;
