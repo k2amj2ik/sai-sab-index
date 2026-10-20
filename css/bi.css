@@ -713,3 +713,4 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 .clb .x{top:8px;right:12px;font-size:36px}.clb .pv{left:6px;top:50%;transform:translateY(-50%)}.clb .nx{right:6px;top:50%;transform:translateY(-50%)}
 .clb .ct{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#ccc;font-size:13px}
 .cph .pp a[data-rmp]{top:4px;right:4px;width:22px;height:22px;line-height:20px;text-align:center;background:rgba(255,255,255,.92);border-radius:50%;font-size:18px}
+.cpic .noimg{flex-direction:column;gap:8px}
