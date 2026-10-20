@@ -472,6 +472,15 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:90;display:flex;align-items:center;justify-content:center}
 .mo .bx{background:#fff;width:640px;max-width:92vw;padding:40px 44px;position:relative}
 .mo .bx.sm{width:420px;padding:26px 28px}
+.mo .bx.lg{width:980px;max-height:88vh;overflow:auto}
+.mo .sub3{font-size:13px;color:#777;margin:12px 0 10px}.mo .sub3 a{margin-left:10px;color:#2a6ab8;cursor:pointer;border-bottom:1px dashed #2a6ab8}.mo .sub3 a.on{color:#000;font-weight:700;border-bottom:2px solid #000}
+.sellt{width:100%;border-collapse:collapse;font-size:13px}.sellt th{text-align:left;font-weight:600;color:#666;border-bottom:1px solid #ccc;padding:8px 6px;white-space:nowrap}.sellt td{border-bottom:1px solid #eee;padding:10px 6px;vertical-align:top}.sellt .r{text-align:right;white-space:nowrap}
+.sellt .fee{max-width:300px;color:#444;line-height:1.5}.sellt .src{font-size:11px;color:#2a6ab8;text-decoration:underline}.sellt .go{display:inline-block;background:#111;color:#fff;padding:6px 10px;font-size:12px;white-space:nowrap}
+.sellt td[data-l]::before{content:none}
+@media(max-width:760px){.mo .bx.lg{padding:26px 18px}.sellt,.sellt tbody,.sellt tr,.sellt td{display:block;width:100%}.sellt tr:first-child{display:none}.sellt tr{border-bottom:1px solid #ddd;padding:10px 0}.sellt td{border:0;padding:3px 0;text-align:left!important;white-space:normal!important;max-width:none!important}.sellt td[data-l]::before{content:attr(data-l) " : ";color:#999;font-size:12px}.sellt td br{display:none}.sellt td .mut{margin-left:6px}.sellt .go{margin-top:6px}}
+.mo .note2{font-size:12px;color:#888;margin-top:12px;line-height:1.6}
+.tips .sellgo{display:block;margin:14px 0 30px;background:#e05b4a;color:#fff;font-size:15px;font-weight:600;padding:10px 18px}
+.ms.dark{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));align-items:start}
 .mo h4{font-size:20px;font-weight:700;color:#000;border-bottom:1px solid #444;padding-bottom:14px}
 .mo .x{position:absolute;right:-16px;top:-16px;width:44px;height:44px;border-radius:50%;background:#444;color:#fff;font-size:22px}
 .mo .two{display:grid;grid-template-columns:1fr 1fr;margin-top:26px}
