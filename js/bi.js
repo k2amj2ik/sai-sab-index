@@ -86,6 +86,22 @@
   BI.toLogin = function () { location.href = "login.html?next=" + encodeURIComponent(BI.here()); };
   BI.need = function () { if (BI.user()) return true; BI.toLogin(); return false; };
   BI.watch = function () { return S.load("watch", []); };
+  /* 10/20 운영자 결정: 포트폴리오 = 내 소장 작품만(holdings). 경매 작품 '담기'는 관심 작품(watch), 직접 고른 평가는 평가 기록(evals)으로 분리.
+     옛 저장(pf)은 한 번만 옮긴다 — 경매 작품은 관심 작품으로, 내가 고른 평가(sel)는 평가 기록으로 */
+  BI.holdings = function () { return S.load("holdings", []); };
+  BI.evals = function () { return S.load("evals", []); };
+  BI.saveHoldings = function (v) { try { localStorage.setItem("sabidx_holdings", JSON.stringify(v)); return true; } catch (e) { return false; } };
+  (function migrate() {
+    var old = S.load("pf", null); if (!old || !old.length) return;
+    var w = S.load("watch", []), ev = S.load("evals", []);
+    old.forEach(function (x) {
+      if (!w.some(function (q) { return q.id === x.id; })) w.push({ aid: x.aid, id: x.id, at: x.at, t: x.t, img: x.img });
+      if (x.sel && !ev.some(function (q) { return q.id === x.id; })) ev.push({ aid: x.aid, id: x.id, at: x.at, t: x.t, img: x.img, sel: x.sel, v: x.v });
+    });
+    S.save("watch", w); S.save("evals", ev); S.save("pf", []);
+  })();
+  BI.evalOf = function (id) { return BI.evals().filter(function (x) { return x.id === id; })[0]; };
+  BI.ownedOf = function (id) { return BI.holdings().filter(function (h) { return h.wid === id; })[0]; };
   BI.favs = function () { return S.load("fav_artists", []); };
   BI.snap = function (id) {     // 담을 때 제목·사진을 함께 저장(마이페이지 목록을 데이터 없이 바로 그리기 위해)
     var c = document.querySelector('.ca[data-id="' + id + '"]'), o = {};
@@ -106,20 +122,20 @@
     if (i >= 0) { f.splice(i, 1); S.save("fav_artists", f); return false; }
     f.unshift(aid); S.save("fav_artists", f); return true;
   };
-  /* 알림 = 관심 작품·포트폴리오 작품·관심 작가의 최근 6개월 마켓무버(마켓무버는 대표작에서만 계산 — 시세로직 '필요한 데이터') */
+  /* 알림 = 관심 작품·내 소장 작품(SAB DB 작품과 연결된 것)·관심 작가의 최근 6개월 마켓무버(마켓무버는 대표작에서만 계산 — 시세로직 '필요한 데이터') */
   BI.alerts = function () {
     var M = window.SAB_MOVERS || [], ids = {}, names = {};
-    BI.watch().concat(S.pf()).forEach(function (x) { ids[x.id] = 1; });
+    BI.watch().forEach(function (x) { ids[x.id] = 1; }); BI.holdings().forEach(function (h) { if (h.wid) ids[h.wid] = 1; });
     BI.favs().forEach(function (k) { var a = BI.art(k); if (a) names[a.name] = 1; });
     return M.filter(function (m) { return m.d >= "2026-04" && (ids[m.work] || names[m.artist_name]); });
   };
   BI.acct = function () {
     var u = BI.user();
     if (!u) return '<a class="login" href="login.html?next=' + encodeURIComponent(BI.here()) + '">Log In</a>';
-    var pf = S.pf(), val = pf.filter(function (x) { return x.sel; }).length;
+    var hold = BI.holdings().length, val = BI.evals().length;
     return '<a class="bell" href="portfolio.html?tab=alerts" aria-label="알림">' + sv('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>') + '<em data-alerts hidden></em></a>' +
       '<div class="acct"><a class="who" href="#" data-acct role="button" aria-haspopup="true">' + BI.ic.user + "<span>" + esc(u.name) + '</span> ▾</a><div class="dd"><p class="nm">' + esc(u.name) + '<small>blueIndex Demo</small></p>' +
-      '<a href="portfolio.html">My Portfolio<em>' + pf.length + '</em></a><a href="portfolio.html?tab=val">내 평가 기록<em>' + val + '</em></a><a href="portfolio.html?tab=watch">관심 작품<em>' + BI.watch().length + '</em></a><a href="portfolio.html?tab=artists">관심 작가<em>' + BI.favs().length + '</em></a><a href="portfolio.html?tab=alerts">알림</a><a href="#" data-logout class="out">Log Out</a></div></div>';
+      '<a href="portfolio.html">My Collection<em>' + hold + '</em></a><a href="portfolio.html?tab=val">내 평가 기록<em>' + val + '</em></a><a href="portfolio.html?tab=watch">관심 작품<em>' + BI.watch().length + '</em></a><a href="portfolio.html?tab=artists">관심 작가<em>' + BI.favs().length + '</em></a><a href="portfolio.html?tab=alerts">알림</a><a href="#" data-logout class="out">Log Out</a></div></div>';
   };
   BI.bindAcct = function () {
     if (BI._acct) return; BI._acct = 1;
@@ -226,12 +242,12 @@
 
   /* ---------- 목록 카드(기획 P19) ---------- */
   BI.card = function (aid, r, q) {
-    var st = r.status, yr = r.date.slice(0, 4), pin = S.inPf(r.id), line1;
+    var st = r.status, yr = r.date.slice(0, 4), pin = BI.inWatch(r.id), line1;
     if (st === "upcoming") { var dd = BI.dd(r.date); line1 = '<p class="now"><span' + (dd < 0 ? ' title="출품 예정으로 등록됐지만 경매일이 지남 — SAB DB에 결과가 아직 반영되지 않음"' : "") + '>' + (dd > 0 ? "D-" + dd : dd === 0 ? "NOW" : "Pending") + '</span><span class="pr">' + (r.lo ? BI.won(r.lo) : "-") + '</span><span class="bd">' + BI.band(r.lo, q) + "</span></p>" + (r.hi ? '<p class="rng">' + BI.won(r.lo) + " - " + BI.won(r.hi) + "</p>" : ""); }
     else if (st === "sold") line1 = "<p><span>" + yr + '</span><span class="pr">' + BI.won(r.price) + '</span><span class="bd">' + BI.band(r.price, q) + "</span></p>";
     else line1 = '<p class="dd"><span>' + (st === "passed" ? "Passed" : st === "withdrawn" ? "Withdrawn" : "–") + " " + yr + '</span><span class="pr">' + (r.lo ? BI.won(r.lo) : "-") + '</span><span class="bd">Est.</span></p>';
     var line2 = st === "upcoming" ? "" : '<p class="lt" data-e><span>3 mon ago</span><span class="pr pending">…</span><span class="pc"></span></p>';
-    return '<a class="ca" href="artwork.html?a=' + aid + "&l=" + r.lot + '" data-lot="' + r.lot + '" data-id="' + esc(r.id) + '"><span class="th">' + BI.img(r.img, r.title) + '<span class="cb" title="BR Similar Auctions — 평가에 쓴 유사 경매 수">' + BI.ic.stack + '<em data-n style="font-style:normal">·</em></span><span class="ap' + (pin ? " in" : "") + '" role="button" aria-label="Add to Portfolio" data-pf>' + BI.ic.fold + "</span></span>" +
+    return '<a class="ca" href="artwork.html?a=' + aid + "&l=" + r.lot + '" data-lot="' + r.lot + '" data-id="' + esc(r.id) + '"><span class="th">' + BI.img(r.img, r.title) + '<span class="cb" title="BR Similar Auctions — 평가에 쓴 유사 경매 수">' + BI.ic.stack + '<em data-n style="font-style:normal">·</em></span><span class="ap' + (pin ? " in" : "") + '" role="button" aria-label="Add to Watchlist" title="관심 작품에 담기" data-pf>' + BI.ic.eye + "</span></span>" +
       '<span class="ti">' + esc(r.title || "Untitled") + '</span><p class="cg">' + esc(BI.cat(r.cat)) + (r.year ? ", " + r.year : "") + '</p><div class="ai">' + line1 + line2 + "</div></a>";
   };
   /* 화면에 보이는 카드만 차례로 3개월 전 평가를 채운다(무거운 계산이 화면을 막지 않게) */
@@ -268,20 +284,14 @@
     var ps = sold.map(function (r) { return r.price; }), mn = Math.min.apply(null, ps), mx = Math.max.apply(null, ps);
     var ed = rows.filter(function (r) { return r.ed; })[0], cr = rows.filter(function (r) { return r.cr; })[0];
     var warn = ps.length >= 2 && mx / mn > 10;
-    var tgt = last || rp, pin = S.inPf(tgt.id);
+    var tgt = last || rp, pin = BI.inWatch(tgt.id);
     var l1 = last ? "<p><span>" + last.date.slice(0, 4) + '</span><span class="pr">' + BI.won(last.price) + '</span><span class="bd">' + BI.band(last.price, q) + "</span></p>" : '<p class="dd"><span>No sale</span><span class="pr">-</span></p>';
-    return '<a class="ca gc" href="artwork.html?a=' + aid + "&l=" + tgt.lot + '" data-lot="' + tgt.lot + '" data-id="' + esc(tgt.id) + '"><span class="th">' + BI.img(rp.img, rp.title) + '<span class="cb" title="BR Similar Auctions — 평가에 쓴 유사 경매 수">' + BI.ic.stack + '<em data-n style="font-style:normal">·</em></span><span class="ap' + (pin ? " in" : "") + '" role="button" aria-label="Add to Portfolio" data-pf>' + BI.ic.fold + "</span></span>" +
+    return '<a class="ca gc" href="artwork.html?a=' + aid + "&l=" + tgt.lot + '" data-lot="' + tgt.lot + '" data-id="' + esc(tgt.id) + '"><span class="th">' + BI.img(rp.img, rp.title) + '<span class="cb" title="BR Similar Auctions — 평가에 쓴 유사 경매 수">' + BI.ic.stack + '<em data-n style="font-style:normal">·</em></span><span class="ap' + (pin ? " in" : "") + '" role="button" aria-label="Add to Watchlist" title="관심 작품에 담기" data-pf>' + BI.ic.eye + "</span></span>" +
       '<span class="ti">' + esc(rp.title || "Untitled") + '</span><p class="cg">' + esc(BI.cat(gcat)) + (gyr ? ", " + gyr : "") + (ed ? " · Edition of " + ed.ed : "") + (cr ? " · " + esc(cr.cr) : "") + '</p>' +
       '<p class="gx"><b>' + rows.length + " Auction Records</b>" + (sold.length ? " · " + sold.length + " sold" : "") + (g.hit < rows.length ? ' <span class="mut">(' + g.hit + " 해당)</span>" : "") + (warn ? ' <span class="wn" title="같은 제작그룹 안 낙찰가 차이가 10배 넘음 — 색·판본이 다른 작품이 섞였을 수 있어 확인 필요">판본 확인 필요</span>' : "") + "</p>" +
       '<div class="ai">' + l1 + (ps.length >= 2 ? '<p class="rng">' + BI.won(mn) + " ~ " + BI.won(mx) + "</p>" : "") + '<p class="lt" data-e><span>3 mon ago</span><span class="pr pending">…</span><span class="pc"></span></p></div></a>';
   };
-  /* 포트폴리오 담기(카드·상세 공통) */
-  BI.pfToggle = function (aid, id, extra) {
-    if (!BI.need()) return false;
-    extra = Object.assign(BI.snap(id), extra || {});
-    var p = S.pf(), i = p.findIndex(function (x) { return x.id === id; });
-    if (i >= 0) { p.splice(i, 1); S.save("pf", p); return false; }
-    p.unshift(Object.assign({ aid: aid, id: id, at: BI.TODAY }, extra || {})); S.save("pf", p); return true;
-  };
-  BI.pfAdded = function () { BI.msg("ok", "<b>Well done!</b> This work has been added to your portfolio. You can see the result anytime."); };
+  /* 카드의 담기 버튼(10/20부터 관심 작품) — 포트폴리오는 소장 작품만 */
+  BI.pfToggle = function (aid, id) { return BI.watchToggle(aid, id); };
+  BI.pfAdded = function () { BI.msg("ok", "<b>Added to Watchlist</b> — 관심 작품에 담았습니다. 내 작품이면 작품 상세의 <b>I Own This</b>로 소장 작품에 등록하세요."); };
 })();

@@ -43,6 +43,17 @@
     // 포트폴리오·계정
     "There is no artwork in portfolio yet.": "아직 담은 작품이 없습니다.", "Go to find artworks": "작품 찾으러 가기", "Total Price": "총 평가액",
     "Consultant": "컨설턴트",
+    // 내 소장 작품(10/20)
+    "My Collection": "내 컬렉션", "I Own This": "내 작품으로 등록", "In My Collection": "내 컬렉션에 있음", "Add to Watchlist": "관심 작품에 담기", "Added to Watchlist": "관심 작품에 담음",
+    "+ Register My Artwork": "+ 소장 작품 등록", "Register My Artwork": "소장 작품 등록", "Edit My Artwork": "소장 작품 수정", "Import CSV": "CSV 가져오기", "Backup": "백업 내려받기", "Restore": "백업 불러오기",
+    "Register": "등록", "Save": "저장", "Edit": "수정", "Delete": "삭제", "Find in SAB DB": "SAB DB에서 같은 작품 찾기", "Saved": "저장함",
+    "Artist *": "작가 *", "Title *": "작품명 *", "Category *": "분류 *", "Size (cm)": "크기 (cm)", "Edition": "에디션", "Signature": "서명", "Condition": "상태",
+    "Where Purchased": "구입처", "Purchase Date": "구입일", "Purchase Price (₩, optional)": "구입가 (₩, 선택)", "My Price Reference (₩, optional)": "내가 아는 시세 (₩, 선택)", "Photos (최대 3장)": "사진 (최대 3장)", "Memo": "메모",
+    "Artist": "작가", "Purchase Price": "구입가", "My Price Reference": "내가 아는 시세",
+    "Mixed Media": "혼합 재료", "Design · Art Toy": "디자인·아트토이", "Goods (굿즈)": "굿즈", "Not Artwork (시계·기타)": "미술품 아님(시계·기타)",
+    "Excellent": "아주 좋음", "Good": "좋음", "Fair": "보통", "Poor": "나쁨", "Unknown": "모름",
+    "Holding": "보유 중", "Preparing": "판매 준비", "Inquiry Sent": "문의 보냄", "Estimate Received": "추정가 받음", "Consigned": "위탁 계약", "Listed": "출품 확정", "Sold": "낙찰", "Unsold": "유찰", "Settled": "정산 완료",
+    "There is no artwork in your collection yet.": "아직 등록한 소장 작품이 없습니다.", "Actual Change": "실제 변화", "vs Purchase Price": "구입가 대비", "Noteworthy Movers": "눈에 띄는 변동", "For 1 Year": "1년",
     // 시세로직 탭
     "Reliability": "신뢰도", "Market Movers": "마켓무버"
   };
@@ -71,6 +82,8 @@
     [/^Withdrawn (\d{4})$/, function (m) { return "출품 취소 " + m[1]; }],
     [/^(\d{4})\.(\d{2}) · Remarkable Market Mover$/, function (m) { return m[1] + "." + m[2] + " · 주목할 시세 변동"; }],
     [/^(.+)'s Portfolio$/, function (m) { return m[1] + "의 포트폴리오"; }],
+    [/^All Works \((\d+)\)$/, function (m) { return "전체 작품 (" + m[1] + ")"; }],
+    [/^(\d+) Works$/, function (m) { return m[1] + "점"; }],
     [/^Edition of ([\d,]+)$/, function (m) { return "에디션 " + m[1] + "장"; }],
     [/^(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4})$/, function (m) { var M = "JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[2]) / 3 + 1; return m[3] + "." + (M < 10 ? "0" : "") + M + "." + (m[1].length < 2 ? "0" : "") + m[1]; }],
     [/^★ Prime Year (.+)$/, function (m) { return "★ 전성기 " + m[1]; }]
