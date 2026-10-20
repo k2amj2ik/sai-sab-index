@@ -187,7 +187,7 @@
     var d = JSON.parse(txt); if (!d || d.kind !== "blueIndex-collection") throw new Error("blueIndex 백업 파일이 아닙니다");
     var cur = mode === "replace" ? [] : C.list(), have = {}; cur.forEach(function (h) { have[h.hid] = 1; });
     /* 같은 작품이 이미 있으면 사진만 합침(사진 넣는 백업 파일로도 쓰게) */
-    (d.holdings || []).forEach(function (h) { if (!have[h.hid]) cur.push(h); else if (h.photos && h.photos.length) { var ex = cur.filter(function (x) { return x.hid === h.hid; })[0], got = {}; (ex.photos || []).forEach(function (p) { if (p && p.id) got[p.id] = 1; }); ex.photos = (ex.photos || []).concat(h.photos.filter(function (p) { return !(p && p.id && got[p.id]); })); } });
+    (d.holdings || []).forEach(function (h) { if (!have[h.hid]) cur.push(h); else if (h.photos && h.photos.length) { var ex = cur.filter(function (x) { return x.hid === h.hid; })[0], got = {}; h.photos.forEach(function (p) { if (p && p.id) got[p.id] = p; }); ex.photos = (ex.photos || []).map(function (p) { return p && p.id && got[p.id] ? got[p.id] : p; }); var had = {}; ex.photos.forEach(function (p) { if (p && p.id) had[p.id] = 1; }); ex.photos = ex.photos.concat(h.photos.filter(function (p) { return !(p && p.id && had[p.id]); }));   /* 같은 번호 사진은 새것으로 바꿈(회전 정정 등) */ } });
     var puts = d.photos ? Object.keys(d.photos).map(function (id) { return C.photoPut(id, d.photos[id]); }) : [];
     if (!BI.saveHoldings(cur)) throw new Error("브라우저 저장 공간이 부족합니다(사진을 줄이거나 지워 주세요)");
     if (d.clients) { var cl = mode === "replace" ? [] : BI.clients(); d.clients.forEach(function (c) { if (!cl.some(function (x) { return x.cid === c.cid; })) cl.push(c); }); C.saveClients(cl); }
