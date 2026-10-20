@@ -701,3 +701,15 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 .pfh .cmemo{font-size:13px;color:#999;margin-left:4px}
 @media(max-width:760px){.pfh .who{flex-wrap:wrap;gap:12px}.pfh .av{flex:0 0 56px;width:56px;height:56px}.pfh h1{font-size:24px;flex:1 1 0;min-width:0}.pfh .cmemo{flex-basis:100%;margin:0}}
 .sellt .hcity{display:block;font-size:12px;font-weight:400}
+/* 소장 작품 사진 여러 장(10/20) */
+.cpic{position:relative}.cpic>img[data-zoom]{cursor:zoom-in}
+.cpic .pcnt{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:2px 8px;border-radius:10px}
+.cths{flex-wrap:wrap}.cths img.on{outline:2px solid var(--gold);outline-offset:1px}
+.cph .pp.cov{border-color:var(--gold);border-width:2px}.cph .pp .mk{position:absolute;bottom:2px;left:2px;font-size:11px;background:rgba(255,255,255,.92);border:1px solid #ccc;padding:0 5px;cursor:pointer}
+.cph .pp.cov small{background:var(--gold);color:#fff}
+.clb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:flex;align-items:center;justify-content:center}
+.clb img{max-width:92vw;max-height:84vh;object-fit:contain}
+.clb button{position:absolute;background:none;border:0;color:#fff;font-size:44px;line-height:1;cursor:pointer;padding:12px}
+.clb .x{top:8px;right:12px;font-size:36px}.clb .pv{left:6px;top:50%;transform:translateY(-50%)}.clb .nx{right:6px;top:50%;transform:translateY(-50%)}
+.clb .ct{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#ccc;font-size:13px}
+.cph .pp a[data-rmp]{top:4px;right:4px;width:22px;height:22px;line-height:20px;text-align:center;background:rgba(255,255,255,.92);border-radius:50%;font-size:18px}

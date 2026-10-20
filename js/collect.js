@@ -107,15 +107,34 @@
     return S.lots(h.aid).then(function (D) { var e = SABE.today(D, h.wid, BI.Y1); return e && e.shown ? e.point : null; });
   };
 
-  /* 사진: 긴 변 640px JPEG로 줄여 저장(브라우저 저장 공간이 작다 — 작품당 3장) */
-  C.shrink = function (file) {
-    return new Promise(function (ok, no) {
-      var fr = new FileReader(); fr.onerror = no;
-      fr.onload = function () { var im = new Image(); im.onerror = no; im.onload = function () { var k = Math.min(1, 640 / Math.max(im.width, im.height)), cv = document.createElement("canvas"); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height); ok(cv.toDataURL("image/jpeg", 0.78)); }; im.src = fr.result; };
-      fr.readAsDataURL(file);
-    });
+  /* 사진(10/20 운영자: "내 컬렉션은 내가 올린 이미지가 나와야, 여러 장 다 올려서 볼 수 있어야")
+     — 작품당 최대 20장. 목록용 작은 그림(th, 긴 변 320px)은 작품 정보와 함께, 원본(긴 변 1600px)은 브라우저 사진 보관소(IndexedDB, 용량 큼)에.
+     h.photos = [{id, th}] (옛 형식인 그림 글자열도 그대로 읽음). 대표 사진 = 첫 장. */
+  C.MAXP = 20;
+  function resize(src, max, q) {
+    return new Promise(function (ok, no) { var im = new Image(); im.onerror = no; im.onload = function () { var k = Math.min(1, max / Math.max(im.width, im.height)), cv = document.createElement("canvas"); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height); ok(cv.toDataURL("image/jpeg", q)); }; im.src = src; });
+  }
+  function readFile(file) { return new Promise(function (ok, no) { var fr = new FileReader(); fr.onerror = no; fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(file); }); }
+  var DBP = null;
+  function db() {
+    if (DBP) return DBP;
+    DBP = new Promise(function (ok, no) { try { var r = indexedDB.open("blueIndex", 1); r.onupgradeneeded = function () { r.result.createObjectStore("photos"); }; r.onsuccess = function () { ok(r.result); }; r.onerror = function () { no(r.error); }; } catch (e) { no(e); } });
+    return DBP;
+  }
+  function tx(mode, fn) { return db().then(function (d) { return new Promise(function (ok, no) { var t = d.transaction("photos", mode), s = t.objectStore("photos"), r = fn(s); t.oncomplete = function () { ok(r && r.result); }; t.onerror = function () { no(t.error); }; }); }); }
+  C.photoPut = function (id, data) { return tx("readwrite", function (s) { return s.put(data, id); }); };
+  C.photoGet = function (id) { return tx("readonly", function (s) { return s.get(id); }); };
+  C.photoDel = function (id) { return tx("readwrite", function (s) { return s.delete(id); }).catch(function () {}); };
+  /* 파일 → {id, th}(원본은 보관소에 저장) */
+  C.addPhoto = function (fileOrData) {
+    return (typeof fileOrData === "string" ? Promise.resolve(fileOrData) : readFile(fileOrData)).then(function (src) {
+      return Promise.all([resize(src, 1600, 0.85), resize(src, 320, 0.78)]);
+    }).then(function (x) { var id = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); return C.photoPut(id, x[0]).then(function () { return { id: id, th: x[1] }; }); });
   };
-  C.cover = function (h) { return (h.photos && h.photos[0]) || h.img || null; };
+  C.thumb = function (p) { return typeof p === "string" ? p : p && p.th; };
+  C.full = function (p) { if (!p) return Promise.resolve(null); if (typeof p === "string") return Promise.resolve(p); return C.photoGet(p.id).then(function (v) { return v || p.th; }, function () { return p.th; }); };
+  C.cover = function (h) { return (h.photos && h.photos.length && C.thumb(h.photos[0])) || h.img || null; };
+  C.shrink = function (file) { return C.addPhoto(file); };   // 옛 호출 이름
 
   /* CSV 가져오기 — 노션 데이터베이스 '내보내기 → CSV'나 엑셀 CSV. 머리글 이름으로 칸을 맞춘다 */
   C.parseCSV = function (txt) {
@@ -156,20 +175,26 @@
 
   /* 백업 — 이 브라우저 기록이 지워지면 사라지므로 파일로 내려받아 둔다 */
   C.backup = function () {
-    var data = { kind: "blueIndex-collection", ver: 1, at: new Date().toISOString(), holdings: C.list(), clients: BI.clients(), evals: BI.evals(), watch: BI.watch(), fav_artists: BI.favs() };
+    var ids = []; C.list().forEach(function (h) { (h.photos || []).forEach(function (p) { if (p && p.id) ids.push(p.id); }); });
+    return Promise.all(ids.map(function (id) { return C.photoGet(id).then(function (v) { return [id, v]; }, function () { return [id, null]; }); })).then(function (P) {
+    var photos = {}; P.forEach(function (x) { if (x[1]) photos[x[0]] = x[1]; });
+    var data = { kind: "blueIndex-collection", ver: 2, at: new Date().toISOString(), holdings: C.list(), photos: photos, clients: BI.clients(), evals: BI.evals(), watch: BI.watch(), fav_artists: BI.favs() };
     var b = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), u = URL.createObjectURL(b), l = document.createElement("a");
     l.href = u; l.download = "blueIndex_my_collection_" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + ".json"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 2000);
+    });
   };
   C.restore = function (txt, mode) {
     var d = JSON.parse(txt); if (!d || d.kind !== "blueIndex-collection") throw new Error("blueIndex 백업 파일이 아닙니다");
     var cur = mode === "replace" ? [] : C.list(), have = {}; cur.forEach(function (h) { have[h.hid] = 1; });
-    (d.holdings || []).forEach(function (h) { if (!have[h.hid]) cur.push(h); });
+    /* 같은 작품이 이미 있으면 사진만 합침(사진 넣는 백업 파일로도 쓰게) */
+    (d.holdings || []).forEach(function (h) { if (!have[h.hid]) cur.push(h); else if (h.photos && h.photos.length) { var ex = cur.filter(function (x) { return x.hid === h.hid; })[0], got = {}; (ex.photos || []).forEach(function (p) { if (p && p.id) got[p.id] = 1; }); ex.photos = (ex.photos || []).concat(h.photos.filter(function (p) { return !(p && p.id && got[p.id]); })); } });
+    var puts = d.photos ? Object.keys(d.photos).map(function (id) { return C.photoPut(id, d.photos[id]); }) : [];
     if (!BI.saveHoldings(cur)) throw new Error("브라우저 저장 공간이 부족합니다(사진을 줄이거나 지워 주세요)");
     if (d.clients) { var cl = mode === "replace" ? [] : BI.clients(); d.clients.forEach(function (c) { if (!cl.some(function (x) { return x.cid === c.cid; })) cl.push(c); }); C.saveClients(cl); }
     if (d.evals) S.save("evals", mode === "replace" ? d.evals : BI.evals().concat(d.evals.filter(function (x) { return !BI.evalOf(x.id); })));
     if (d.watch) S.save("watch", mode === "replace" ? d.watch : BI.watch().concat(d.watch.filter(function (x) { return !BI.inWatch(x.id); })));
     if (d.fav_artists) S.save("fav_artists", mode === "replace" ? d.fav_artists : BI.favs().concat(d.fav_artists.filter(function (x) { return BI.favs().indexOf(x) < 0; })));
-    return (d.holdings || []).length;
+    return Promise.all(puts).then(function () { return (d.holdings || []).length; });
   };
   C.usedKB = function () { var n = 0; try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); n += (localStorage.getItem(k) || "").length + k.length; } } catch (e) {} return Math.round(n * 2 / 1024); };
 
