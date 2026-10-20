@@ -565,7 +565,7 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 }
 
 /* 포트폴리오(기획 P33~36) */
-.pfh{padding:40px 0 10px}
+.pfh{padding-top:40px;padding-bottom:10px}
 .pfh .who{display:flex;align-items:center;gap:16px}
 .pfh .av{width:72px;height:72px;border-radius:50%;background:#e2e2e2;display:flex;align-items:center;justify-content:center;color:#aaa}
 .pfh .av svg{width:40px;height:40px}
@@ -685,8 +685,8 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 /* 컬렉션 목록(포트폴리오) */
 .ctools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:24px 0 0}.ctools .btn2{height:38px;font-size:14px;cursor:pointer}.ctools .btn1{height:40px;font-size:15px}
 .clist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:20px 0 60px}
-.clist a.it{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;background:#fff;border:1px solid #e6e6e6;padding:12px;color:inherit}
-.clist a.it:hover{border-color:#bbb}.clist img,.clist .noimg{width:96px;height:96px;object-fit:cover}
-.clist .t{font-family:var(--serif);font-style:italic;font-size:17px;color:#222;line-height:1.25}.clist .ar{font-size:12px;font-weight:700;text-transform:uppercase;color:#555}
+.clist a.ci{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;background:#fff;border:1px solid #e6e6e6;padding:12px;color:inherit}
+.clist a.ci:hover{border-color:#bbb}.clist img,.clist .noimg{width:96px;height:96px;object-fit:cover}
+.clist .t{font-family:var(--serif);font-style:italic;font-size:17px;color:#222;line-height:1.25}.clist .cart{font-size:12px;font-weight:700;text-transform:uppercase;color:#555}
 .clist .v{font-size:16px;color:var(--gold);margin-top:6px}.clist .s{font-size:12px;color:#999}.clist .cst{margin-top:6px}
 @media(max-width:760px){.cform,.chold{padding:24px 16px 60px}.cgrid,.cchk{grid-template-columns:minmax(0,1fr)}.cdt{grid-template-columns:minmax(0,1fr);gap:20px}.cmore dl{grid-template-columns:110px minmax(0,1fr)}.clog-add{grid-template-columns:minmax(0,1fr)}.cinfo h2{font-size:26px}.csell section{padding:16px}.clist{grid-template-columns:minmax(0,1fr)}}
