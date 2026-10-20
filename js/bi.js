@@ -300,6 +300,15 @@
       '<p class="gx"><b>' + rows.length + " Auction Records</b>" + (sold.length ? " · " + sold.length + " sold" : "") + (g.hit < rows.length ? ' <span class="mut">(' + g.hit + " 해당)</span>" : "") + (warn ? ' <span class="wn" title="같은 제작그룹 안 낙찰가 차이가 10배 넘음 — 색·판본이 다른 작품이 섞였을 수 있어 확인 필요">판본 확인 필요</span>' : "") + "</p>" +
       '<div class="ai">' + l1 + (ps.length >= 2 ? '<p class="rng">' + BI.won(mn) + " ~ " + BI.won(mx) + "</p>" : "") + '<p class="lt" data-e><span>3 mon ago</span><span class="pr pending">…</span><span class="pc"></span></p></div></a>';
   };
+  /* 경매사 원본 찾기(10/20 운영자 "누르면 경매사의 경매 결과 원본이 열리게") — SAB DB에 랏 원본 주소가 없어(개선 요청 대장 D-17)
+     경매사 사이트 안 검색(작가·작품명·연도·랏 번호)으로 연다. 경매사 사이트 주소는 data/houses.js 판매 의뢰 주소의 도메인 */
+  BI.srcUrl = function (r, a) {
+    var H = window.SAB_HOUSES || {}, h = H[r.house] || {}, dom = "";
+    try { if (h.consign_url) dom = new URL(h.consign_url).hostname.replace(/^www\./, ""); } catch (e) {}
+    if (/facebook|instagram|naver|kakao|linkedin|twitter|x\.com|google/.test(dom)) dom = "";   // 판매 의뢰 주소가 SNS면 경매사 이름으로 검색
+    var q = [a ? '"' + BI.en(a) + '"' : "", r.title ? '"' + String(r.title).slice(0, 60) + '"' : "", r.date ? r.date.slice(0, 4) : "", r.lno ? "lot " + String(r.lno).replace(/[^0-9A-Za-z]/g, "") : "", dom ? "site:" + dom : '"' + r.house + '"'].filter(Boolean).join(" ");
+    return "https://www.google.com/search?q=" + encodeURIComponent(q);
+  };
   /* 카드의 담기 버튼(10/20부터 관심 작품) — 포트폴리오는 소장 작품만 */
   BI.pfToggle = function (aid, id) { return BI.watchToggle(aid, id); };
   BI.pfAdded = function () { BI.msg("ok", "<b>Added to Watchlist</b> — 관심 작품에 담았습니다. 내 작품이면 작품 상세의 <b>I Own This</b>로 소장 작품에 등록하세요."); };
