@@ -82,7 +82,7 @@
   /* ---------- 로그인·마이페이지(10/19: 기획 P05 GNB·P10 로그인 + 업계 방식 — 오른쪽 위 Log In → 로그인 후 이름 드롭다운) ----------
      데모라 실제 인증은 없다. 이 브라우저에 사용자 이름·포트폴리오·관심 목록을 저장 */
   BI.user = function () { return S.load("user", null); };
-  BI.here = function () { return (location.pathname.split("/").pop() || "index.html") + location.search; };
+  BI.here = function () { return (location.pathname.split("/").pop() || "index.html") + location.search + location.hash; };
   BI.toLogin = function () { location.href = "login.html?next=" + encodeURIComponent(BI.here()); };
   BI.need = function () { if (BI.user()) return true; BI.toLogin(); return false; };
   BI.watch = function () { return S.load("watch", []); };
