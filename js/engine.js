@@ -16,17 +16,10 @@
   /* 거래 기록 풀기 */
   E.load = function (raw) {
     var c = raw.cols, rows = raw.rows.map(function (r) { var o = {}; for (var i = 0; i < c.length; i++) o[c[i]] = r[i]; o.mtS = o.mt ? o.mt.split(" ") : []; o.ttS = o.tt ? o.tt.split(" ") : []; return o; });
-    return { rows: rows, sig: raw.sig || {}, sty: raw.sty || {}, stc: raw.stc || [1, 0], styC: {}, res: raw.res || [] };
+    return { rows: rows, sty: raw.sty || {}, stc: raw.stc || [1, 0], styC: {}, res: raw.res || [] };
   };
 
   function jacc(a, b) { if (!a.length || !b.length) return null; var s = {}, inter = 0, uni = 0, k; for (k = 0; k < a.length; k++) s[a[k]] = 1; for (k = 0; k < b.length; k++) if (s[b[k]] === 1) { inter++; s[b[k]] = 2; } uni = a.length + b.length - inter; return inter / uni; }
-  function popcnt(x) { x = x - ((x >>> 1) & 0x55555555); x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); return (((x + (x >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; }
-  function imgSim(D, a, b) {
-    var sa = D.sig[a], sb = D.sig[b]; if (!sa || !sb) return null;
-    var diff = 0; for (var i = 0; i < 48; i++) diff += Math.abs(sa[0][i] - sb[0][i]); diff /= 48;
-    var ham = popcnt((sa[1] ^ sb[1]) >>> 0) + popcnt((sa[2] ^ sb[2]) >>> 0);
-    return 0.7 * Math.max(0, 1 - diff / 128) + 0.3 * (1 - ham / 64);
-  }
   /* 13회차 채택(10/26): 화풍 신호 — 128개 1바이트 정수(base64). 정수 곱으로 코사인을 정확히 내서 sabindex_core_v3.style_sim과 같은 값 */
   function styVec(D, id) {
     var v = D.styC[id]; if (v !== undefined) return v;
@@ -60,7 +53,7 @@
   /* v3.sim */
   function simV3(D, t, c, asof) {
     var s = simV2(t, c, asof);
-    if (IMG_CATS[t.cat]) { var v = styleSim(D, t.id, c.id); if (v !== null) s = 0.7 * s + 0.3 * v; }   /* 13회차: 비교작 유사도의 그림 항목 = 화풍 신호(등급 A의 '그림 닮음'은 imgSim 그대로) */
+    if (IMG_CATS[t.cat]) { var v = styleSim(D, t.id, c.id); if (v !== null) s = 0.7 * s + 0.3 * v; }   /* 13회차: 비교작 유사도의 그림 항목 = 화풍 신호 */
     if (t.tier === c.tier) s += 0.1;
     return s;
   }
@@ -172,7 +165,8 @@
     out.sc = 1;
     if (!same.length && !opt.noSC) { var f = selfCal(D, asof); out.sc = f; out.point *= f; out.lo *= f; out.hi *= f; }
     out.top_sim = Math.round(Math.min(top[1], 1) * 100) / 100;
-    out.img = sameOf(top[2]) ? 1 : (IMG_CATS[t.cat] ? imgSim(D, t.id, top[2].id) : null);
+    var tImg = IMG_CATS[t.cat] ? styleSim(D, t.id, top[2].id) : null;
+    out.img = sameOf(top[2]) ? 1 : (tImg === null ? null : Math.round(tImg * 100) / 100);   /* 등급 A의 그림 조건 — 10/27부터 화풍 신호, V3.t_img처럼 소수 둘째 자리 */
     out.used = kept.map(function (k) { return { c: k[2], adj: k[0], sim: k[1], price: k[3], same: sameOf(k[2]), ed: sameOf(k[2]) && !trueSame(k[2]) }; });
     var usedLots = {}; kept.forEach(function (k) { usedLots[k[2].lot] = 1; });
     out.more = scored.filter(function (x) { return !usedLots[x[1].lot]; }).slice(0, 40).map(function (x) { return { c: x[1], adj: adj(x[1], x[2]), sim: x[0], price: x[2], same: sameOf(x[1]), ed: sameOf(x[1]) && !trueSame(x[1]) }; });
