@@ -120,7 +120,8 @@
     /* 10회차 채택(10a): 같은 제작그룹(판화·멀티플 등 에디션, "g…")이면 같은 작품으로 계산. 등급은 같은 장(S)과 같은 판본(E)으로 나눔 */
     var tg = t.grp && String(t.grp).charAt(0) === "g" ? t.grp : null;
     function sameOf(c) { return c.id === t.id || (!!tg && c.grp === tg); }
-    function trueSame(c) { return c.id === t.id || (!!t.cid && String(t.cid).indexOf("#") >= 0 && c.cid === t.cid); }
+    /* 12회차: "gi…" = 경매 사진이 같아 합친 원화(작품 번호만 다르게 다시 등록된 한 점) → 같은 묶음이면 같은 작품(S) */
+    function trueSame(c) { return c.id === t.id || (!!t.cid && String(t.cid).indexOf("#") >= 0 && c.cid === t.cid) || (!!tg && tg.slice(0, 2) === "gi" && c.grp === tg); }
     cands = cands.filter(function (c) { return c.kind === tk || (!!tg && c.grp === tg); });
     if (opt.filter) cands = cands.filter(function (c) { return sameOf(c) || opt.filter(c); });
     var sold = cands.filter(function (c) { return c.status === "sold" && c.price; });
