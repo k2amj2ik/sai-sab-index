@@ -1,4 +1,4 @@
-/* SAB Index 계산 엔진 — 시험판 10회차 채택 규칙(4회차 틀 + 5·8·9회차 보정 + 10회차 제작그룹)(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
+/* SAB Index 계산 엔진 — 시험판 13회차 채택 규칙(4회차 틀 + 5·8·9회차 보정 + 10~12회차 제작그룹 + 13회차 화풍 신호)(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
    브라우저에서 작가 거래 기록(data/lots/a{작가}.js)만으로 오늘 평가가격·근거 작품·흐름을 계산한다.
    단어 판정(kind)·재질/제목 단어·경매사 급(tier)은 데이터 쪽에서 미리 계산해 넣었다. */
 (function (root) {
@@ -16,7 +16,7 @@
   /* 거래 기록 풀기 */
   E.load = function (raw) {
     var c = raw.cols, rows = raw.rows.map(function (r) { var o = {}; for (var i = 0; i < c.length; i++) o[c[i]] = r[i]; o.mtS = o.mt ? o.mt.split(" ") : []; o.ttS = o.tt ? o.tt.split(" ") : []; return o; });
-    return { rows: rows, sig: raw.sig || {}, res: raw.res || [] };
+    return { rows: rows, sig: raw.sig || {}, sty: raw.sty || {}, stc: raw.stc || [1, 0], styC: {}, res: raw.res || [] };
   };
 
   function jacc(a, b) { if (!a.length || !b.length) return null; var s = {}, inter = 0, uni = 0, k; for (k = 0; k < a.length; k++) s[a[k]] = 1; for (k = 0; k < b.length; k++) if (s[b[k]] === 1) { inter++; s[b[k]] = 2; } uni = a.length + b.length - inter; return inter / uni; }
@@ -26,6 +26,20 @@
     var diff = 0; for (var i = 0; i < 48; i++) diff += Math.abs(sa[0][i] - sb[0][i]); diff /= 48;
     var ham = popcnt((sa[1] ^ sb[1]) >>> 0) + popcnt((sa[2] ^ sb[2]) >>> 0);
     return 0.7 * Math.max(0, 1 - diff / 128) + 0.3 * (1 - ham / 64);
+  }
+  /* 13회차 채택(10/26): 화풍 신호 — 128개 1바이트 정수(base64). 정수 곱으로 코사인을 정확히 내서 sabindex_core_v3.style_sim과 같은 값 */
+  function styVec(D, id) {
+    var v = D.styC[id]; if (v !== undefined) return v;
+    var b = D.sty[id]; if (!b) return (D.styC[id] = null);
+    var bin = atob(b), q = new Int8Array(bin.length), n = 0;
+    for (var i = 0; i < bin.length; i++) { q[i] = (bin.charCodeAt(i) << 24) >> 24; n += q[i] * q[i]; }
+    return (D.styC[id] = { q: q, n: n });
+  }
+  function styleSim(D, a, b) {
+    var sa = styVec(D, a), sb = styVec(D, b); if (!sa || !sb || !sa.n || !sb.n) return null;
+    var dot = 0; for (var i = 0; i < sa.q.length; i++) dot += sa.q[i] * sb.q[i];
+    var cos = D.stc[0] * (dot / Math.sqrt(sa.n * sb.n)) + D.stc[1];
+    return Math.min(1, Math.max(0, (cos - 0.6) / 0.35));
   }
   /* core.sim */
   function simBase(t, c, asof) {
@@ -46,7 +60,7 @@
   /* v3.sim */
   function simV3(D, t, c, asof) {
     var s = simV2(t, c, asof);
-    if (IMG_CATS[t.cat]) { var v = imgSim(D, t.id, c.id); if (v !== null) s = 0.7 * s + 0.3 * v; }
+    if (IMG_CATS[t.cat]) { var v = styleSim(D, t.id, c.id); if (v !== null) s = 0.7 * s + 0.3 * v; }   /* 13회차: 비교작 유사도의 그림 항목 = 화풍 신호(등급 A의 '그림 닮음'은 imgSim 그대로) */
     if (t.tier === c.tier) s += 0.1;
     return s;
   }
