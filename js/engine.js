@@ -5,6 +5,7 @@
   var E = {};
   var K = 7, POOLK = 15, SHOW_MIN = 10, LOW_MIN = 20, LOOKBACK = 10, SAME_SIM = 2.0;
   var IMG_CATS = { "paintings": 1, "works-on-paper": 1, "mixed-media": 1 };
+  var GI_PRINT = /(lithograph|screen ?print|serigraph|silkscreen|etching|aquatint|woodcut|linocut|engraving|offset|gicl[eé]e|pigment print|digital print|inkjet|\bprint\b|판화|실크스크린|석판|목판)/i;   // 12회차 gi 묶음 S 판정용(sabindex_core_v4.GI_PRINT와 같음)
 
   /* 날짜 → 일수(UTC) */
   var dcache = {};
@@ -120,8 +121,10 @@
     /* 10회차 채택(10a): 같은 제작그룹(판화·멀티플 등 에디션, "g…")이면 같은 작품으로 계산. 등급은 같은 장(S)과 같은 판본(E)으로 나눔 */
     var tg = t.grp && String(t.grp).charAt(0) === "g" ? t.grp : null;
     function sameOf(c) { return c.id === t.id || (!!tg && c.grp === tg); }
-    /* 12회차: "gi…" = 경매 사진이 같아 합친 원화(작품 번호만 다르게 다시 등록된 한 점) → 같은 묶음이면 같은 작품(S) */
-    function trueSame(c) { return c.id === t.id || (!!t.cid && String(t.cid).indexOf("#") >= 0 && c.cid === t.cid) || (!!tg && tg.slice(0, 2) === "gi" && c.grp === tg); }
+    /* 12회차: "gi…" = 경매 사진이 같아 합친 '원화·단독' 묶음 → 손으로 그린 한 점(회화·종이·혼합재료 + 재질에 판화 표기 없음)이면 같은 묶음 = S.
+       무제 판화처럼 에디션인데 원화·단독으로 남은 것은 같은 판의 다른 장이라 E (sabindex_core_v4.py와 같은 규칙) */
+    var giOne = !!tg && tg.slice(0, 2) === "gi" && IMG_CATS[t.cat] && !GI_PRINT.test(t.med || "");
+    function trueSame(c) { return c.id === t.id || (!!t.cid && String(t.cid).indexOf("#") >= 0 && c.cid === t.cid) || (giOne && c.grp === tg); }
     cands = cands.filter(function (c) { return c.kind === tk || (!!tg && c.grp === tg); });
     if (opt.filter) cands = cands.filter(function (c) { return sameOf(c) || opt.filter(c); });
     var sold = cands.filter(function (c) { return c.status === "sold" && c.price; });
