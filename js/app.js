@@ -67,7 +67,8 @@
   var LC = {};
   SAB.lots = function (aid) {   /* 작가 거래 기록 → 계산 엔진 형식 */
     if (LC[aid]) return LC[aid];
-    LC[aid] = (window.SABL && window.SABL[aid] ? Promise.resolve() : SAB.need("lots/a" + aid)).then(function () { return SABE.load(window.SABL[aid]); });
+    var mk = window.SAB_MKT ? Promise.resolve() : (SAB._mk = SAB._mk || SAB.need("market"));   /* 16회차 시장 분기 지수(모든 작가 공통, 한 번만) */
+    LC[aid] = Promise.all([mk, window.SABL && window.SABL[aid] ? Promise.resolve() : SAB.need("lots/a" + aid)]).then(function () { SABE.setMarket(window.SAB_MKT); return SABE.load(window.SABL[aid]); });
     return LC[aid];
   };
   SAB.artist = function (aid) { return (window.SAB_ARTISTS2 || []).filter(function (a) { return a.id === aid; })[0]; };

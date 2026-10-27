@@ -1,4 +1,4 @@
-/* SAB Index 계산 엔진 — 시험판 13회차 채택 규칙(4회차 틀 + 5·8·9회차 보정 + 10~12회차 제작그룹 + 13회차 화풍 신호)(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
+/* SAB Index 계산 엔진 — 시험판 16회차 채택 규칙(4회차 틀 + 5·8·9회차 보정 + 10~12회차 제작그룹 + 13회차 화풍 신호 + 16회차 시장 분기 지수)(Python sabindex_core_v4·v3·v2·core)를 그대로 옮긴 것.
    브라우저에서 작가 거래 기록(data/lots/a{작가}.js)만으로 오늘 평가가격·근거 작품·흐름을 계산한다.
    단어 판정(kind)·재질/제목 단어·경매사 급(tier)은 데이터 쪽에서 미리 계산해 넣었다. */
 (function (root) {
@@ -14,6 +14,18 @@
   E.years = years;
 
   /* 거래 기록 풀기 */
+  /* 16회차 채택(10/27, 16b): 비교작 가격에 시장 분기 지수 변화의 절반 — data/market.js(window.SAB_MKT, 51번 export와 같은 파일).
+     sabindex_core_v4.market_factor와 같은 계산. 구간 = 국내(서울옥션·케이옥션)/해외 × 회화류/그 외 */
+  var MKT = null, DOMESTIC = { "SEOUL AUCTION": 1, "K AUCTION": 1 };
+  E.setMarket = function (m) { MKT = m || null; };
+  function qnum(d) { return (+d.slice(0, 4) - MKT.q0) * 4 + Math.floor((+d.slice(5, 7) - 1) / 3); }
+  function marketFactor(c, asof) {
+    if (!MKT) return 1;
+    var sg = (DOMESTIC[String(c.house || "").toUpperCase()] ? "KR" : "INT") + "-" + (IMG_CATS[c.cat] ? "P" : "O");
+    var b = (MKT.seg[sg] || {})[String(qnum(asof))], q1 = qnum(c.date);
+    if (!b || q1 < 0 || q1 >= b.length - 1) return 1;
+    return Math.exp(Math.max(-MKT.cap, Math.min(MKT.cap, MKT.damp * (b[b.length - 1] - b[q1]))));
+  }
   E.load = function (raw) {
     var c = raw.cols, rows = raw.rows.map(function (r) { var o = {}; for (var i = 0; i < c.length; i++) o[c[i]] = r[i]; o.mtS = o.mt ? o.mt.split(" ") : []; o.ttS = o.tt ? o.tt.split(" ") : []; return o; });
     return { rows: rows, sty: raw.sty || {}, stc: raw.stc || [1, 0], styC: {}, res: raw.res || [] };
@@ -148,7 +160,7 @@
     var scored = use.map(function (u) { var c = u[0]; return [sameOf(c) ? SAME_SIM : simV3(D, t, c, asof), c, u[1]]; });
     scored.sort(function (x, y) { return y[0] - x[0]; });
     var g = recentTrend(D, asof);
-    function adj(c, p) { if (sameOf(c)) return g ? p * Math.exp(g * Math.min(3, years(asof, c.date))) : p; /* 5회차: 같은 작품은 크기·경매사 급 보정 없음 / 8회차: 최근 2년 흐름만 */ var f = (t.area && c.area) ? Math.pow(t.area / c.area, b) : 1; if (c.tier !== tt) f *= tt === "major" ? tf : 1 / tf; return p * f; }
+    function adj(c, p) { if (sameOf(c)) return g ? p * Math.exp(g * Math.min(3, years(asof, c.date))) : p; /* 5회차: 같은 작품은 크기·경매사 급 보정 없음 / 8회차: 최근 2년 흐름만 */ var f = (t.area && c.area) ? Math.pow(t.area / c.area, b) : 1; if (c.tier !== tt) f *= tt === "major" ? tf : 1 / tf; f *= marketFactor(c, asof); /* 16회차 */ return p * f; }
     var pool = scored.slice(0, POOLK);
     if (opt.exclude) pool = scored.filter(function (x) { return !opt.exclude[x[1].lot]; }).slice(0, POOLK);
     var vals = pool.map(function (x) { return [adj(x[1], x[2]), x[0], x[1], x[2]]; });
