@@ -3,7 +3,7 @@
    단어 판정(kind)·재질/제목 단어·경매사 급(tier)은 데이터 쪽에서 미리 계산해 넣었다. */
 (function (root) {
   var E = {};
-  var K = 7, POOLK = 15, SHOW_MIN = 10, LOW_MIN = 20, LOOKBACK = 10, SAME_SIM = 2.0;
+  var K = 7, POOLK = 15, SHOW_MIN = 10, LOW_MIN = 20, LOOKBACK = 10, SAME_SIM = 2.0, PASSED_F = 0.85, BLEND = [0.5, 0.25];   /* 17회차: 유찰 85% · 최근 값 위주 */
   var IMG_CATS = { "paintings": 1, "works-on-paper": 1, "mixed-media": 1 };
   var GI_PRINT = /(lithograph|screen ?print|serigraph|silkscreen|etching|aquatint|woodcut|linocut|engraving|offset|gicl[eé]e|pigment print|digital print|inkjet|\bprint\b|판화|실크스크린|석판|목판)/i;   // 12회차 gi 묶음 S 판정용(sabindex_core_v4.GI_PRINT와 같음)
 
@@ -151,9 +151,10 @@
     var sold5 = sold.filter(function (c) { return years(asof, c.date) <= 5; }).length;
     var same = sold.filter(sameOf);
     var out = { sold5: sold5, kind: tk, same_n: same.length, same_true: same.filter(trueSame).length };
-    if (tk === "goods" || (sold5 < 3 && !same.length)) { out.shown = false; out.reason = tk === "goods" ? "굿즈" : "근거 부족"; return out; }
+    if (same.length) out.same_old = years(asof, same.map(function (c) { return c.date; }).sort().pop()) > 5;   /* 17회차: 5년 초과면 등급 S·E 없음 */
+    if (tk === "goods" || !sold.length) { out.shown = false; out.reason = tk === "goods" ? "굿즈" : "근거 부족"; return out; }
     var use = sold.map(function (c) { return [c, c.price]; });
-    if (mode !== "none") cands.forEach(function (c) { if (c.status === "passed" && c.lo && (mode === "all" || sameOf(c))) use.push([c, c.lo * 0.9]); });
+    if (mode !== "none") cands.forEach(function (c) { if (c.status === "passed" && c.lo && (mode === "all" || sameOf(c))) use.push([c, c.lo * PASSED_F]); });
     if (t.area) use = use.filter(function (u) { return u[0].area || sameOf(u[0]); });
     if (!use.length) { out.shown = false; out.reason = "근거 부족"; return out; }
     var b = sizeExponent(cands), tf = tierFactor(sold, b), tt = t.tier;
@@ -170,9 +171,16 @@
     if (opt.include) scored.forEach(function (x) { if (opt.include[x[1].lot] && !kept.some(function (k) { return k[2].lot === x[1].lot; })) kept.push([adj(x[1], x[2]), x[0], x[1], x[2]]); });
     var pts = kept.map(function (k) { return k[0]; }), q = pts.length >= 2 ? quartiles(pts) : [pts[0], pts[0], pts[0]];
     var top = kept[0];
-    out.shown = sold5 >= SHOW_MIN || !!same.length;
+    out.shown = true;   /* 17회차: 작품 기록 10건 기준 삭제 — 1건이라도 포함 */
     out.low_conf = sold5 < LOW_MIN && !same.length;
     out.point = wmedian(kept.map(function (k) { return [k[0], k[1]]; }));
+    /* 17회차: 5년 안 같은 작품 최근 낙찰과 근거 전체 값을 섞음, 1.5배 넘게 다르면 최근 비중을 낮춤 */
+    var sv = use.filter(function (u) { return sameOf(u[0]) && u[0].status === "sold" && years(asof, u[0].date) <= 5 && !(opt.exclude && opt.exclude[u[0].lot]); });
+    if (sv.length) {
+      var last = sv[0]; sv.forEach(function (u) { if (u[0].date > last[0].date) last = u; });
+      var v1 = adj(last[0], last[1]), wt = Math.abs(Math.log(v1 / out.point)) > Math.log(1.5) ? BLEND[1] : BLEND[0];
+      out.point = Math.exp(wt * Math.log(v1) + (1 - wt) * Math.log(out.point));
+    }
     out.lo = q[0]; out.hi = q[2]; out.n = kept.length; out.b = b; out.tf = tf; out.g = g;
     out.sc = 1;
     if (!same.length && !opt.noSC) { var f = selfCal(D, asof); out.sc = f; out.point *= f; out.lo *= f; out.hi *= f; }
@@ -187,6 +195,7 @@
   };
   E.grade = function (e) {
     if (!e.shown) return "보류";
+    if (e.same_old) return "B";          // 17회차: 같은 작품 최근 거래 5년 초과
     if (e.same_true) return "S";
     if (e.same_n) return "E";            // 10회차: 같은 판본(제작그룹)의 다른 장 낙찰만 있음
     if (e.top_sim >= 0.8 && (e.img === null || e.img === undefined || e.img >= 0.7) && e.sold5 >= 20) return "A";
