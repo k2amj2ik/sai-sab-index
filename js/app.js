@@ -55,11 +55,13 @@
     (0, eval)(new TextDecoder().decode(pt));
   }
   function scriptRun(path) { return new Promise(function (ok, no) { var s = document.createElement("script"); s.src = path; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
-  SAB.need = function (name) { return window.SAB_ENC ? encRun("data/" + name + ".bin") : scriptRun("data/" + name + ".js"); };
+  /* 11/8: 데이터 파일 주소에 내용 지문(?v=) — 브라우저가 옛 데이터를 기억해 새 화면과 어긋나는 일 방지 */
+  function binUrl(n) { var v = (window.SAB_DV || {})[n]; return "data/" + n + ".bin" + (v ? "?v=" + v : ""); }
+  SAB.need = function (name) { return window.SAB_ENC ? encRun(binUrl(name)) : scriptRun("data/" + name + ".js"); };
   SAB.boot = function (fn) {
     var need = window.SAB_NEED || [];
     if (!window.SAB_ENC) return fn();
-    Promise.all(need.map(function (n) { return encRun("data/" + n + ".bin"); })).then(fn).catch(function (e) {
+    Promise.all(need.map(function (n) { return encRun(binUrl(n)); })).then(fn).catch(function (e) {
       try { localStorage.removeItem("sabidx_dk"); } catch (x) {}
       document.body.insertAdjacentHTML("beforeend", '<div class="empty">데이터를 열지 못했습니다. 새로고침해 주세요. (' + SAB.esc(e.message) + ")</div>");
     });
