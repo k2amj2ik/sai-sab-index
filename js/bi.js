@@ -311,5 +311,10 @@
   };
   /* 카드의 담기 버튼(10/20부터 관심 작품) — 포트폴리오는 소장 작품만 */
   BI.pfToggle = function (aid, id) { return BI.watchToggle(aid, id); };
+  /* 낙찰가 종류(11/8 운영자): 화면의 낙찰가 = 해머가, 해머가 기록이 없는 랏만 프리미엄가(수수료 포함가) — data/lots의 pk 칸(54번) */
+  BI.pk = function (r) {
+    if (!r || r.status !== "sold" || !r.price || !r.pk) return "";
+    return r.pk === "P" ? ' <small class="pk p" title="이 랏은 해머가 기록이 없어 수수료 포함가(프리미엄가)를 씁니다">프리미엄가</small>' : ' <small class="pk" title="수수료를 뺀 낙찰가(해머가)">해머가</small>';
+  };
   BI.pfAdded = function () { BI.msg("ok", "<b>Added to Watchlist</b> — 관심 작품에 담았습니다. 내 작품이면 작품 상세의 <b>I Own This</b>로 소장 작품에 등록하세요."); };
 })();

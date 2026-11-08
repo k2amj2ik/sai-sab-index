@@ -455,6 +455,7 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 .ot .wk .h{font-size:11px;color:#aaa}
 .ot .ic{display:inline-flex;flex-direction:column;align-items:center;font-size:11px;color:#888;gap:2px}
 .ot .ic svg{width:20px;height:20px}
+.ot .ic>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:220px;text-align:center;line-height:1.4;word-break:break-word}   /* 재질 등 두 줄까지(11/8) */
 .ot .simv{font-size:30px;font-weight:300;color:#444}
 .tg{width:58px;height:32px;border-radius:16px;background:#ddd;position:relative;display:inline-block;transition:.25s;cursor:pointer}
 .tg:after{content:"×";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff;color:#bbb;font-size:15px;line-height:26px;text-align:center;transition:.25s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
@@ -727,3 +728,7 @@ table.ot{width:100%;border-collapse:collapse;margin-top:10px}
 .clb .ct{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#ccc;font-size:13px}
 .cph .pp a[data-rmp]{top:4px;right:4px;width:22px;height:22px;line-height:20px;text-align:center;background:rgba(255,255,255,.92);border-radius:50%;font-size:18px}
 .cpic .noimg{flex-direction:column;gap:8px}
+
+/* 낙찰가 종류 표시(11/8) */
+.pk{display:inline-block;font-size:11px;font-style:normal;font-weight:400;line-height:1;padding:3px 5px;margin-left:6px;border:1px solid #ccc;color:#888;border-radius:3px;vertical-align:middle;white-space:nowrap;font-family:var(--sans)}.pk.p{border-color:#c98a2b;color:#a96a10;background:#fff8ec}
+.lotl td .pk{display:inline-block;margin:4px 0 0}
