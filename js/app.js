@@ -77,7 +77,7 @@
 
   /* ---------- 머리말·꼬리말 ---------- */
   /* 시세로직 탭 하위 메뉴(blueIndex Demo는 js/bi.js의 BI.shell) */
-  var SUB = [["logic.html", "계산 방식"], ["trust.html", "신뢰도"], ["movers.html", "마켓무버"], ["logic.html#data", "필요한 데이터"]];
+  var SUB = [["logic.html", "계산 방식"], ["trust.html", "신뢰도"], ["movers.html", "마켓무버"], ["logic.html#data", "필요한 데이터"], ["options.html", "설계안 비교"]];
   SAB.shell = function (on) {
     if (window.BI) BI.shell("logic");
     var sb = document.getElementById("sub");
